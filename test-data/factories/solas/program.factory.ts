@@ -18,22 +18,42 @@ export type SatelliteLaunchLayerData = {
 };
 
 /**
- * Generates sample data for Layer 1 of a Specialty/Space/Satellite Launch financial layer,
+ * Generates sample data for a Specialty/Space/Satellite Launch financial layer,
  * following the documented sample-data pattern in Solas_AddProgram_Workflow.md.
  * Free-text fields are randomized per run to avoid colliding with prior test data.
- * @returns {SatelliteLaunchLayerData} Layer 1 sample data.
+ * @param {1 | 2} layerNumber - Which documented layer's sample values to use.
+ * @returns {SatelliteLaunchLayerData} Sample data for that layer.
  */
-export function generateSatelliteLaunchLayerOne(): SatelliteLaunchLayerData {
+export function generateSatelliteLaunchLayer(
+    layerNumber: 1 | 2
+): SatelliteLaunchLayerData {
+    const base =
+        layerNumber === 1
+            ? {
+                  description: 'Layer 1',
+                  policyLimit: 20_000_000,
+                  excess: 500_000,
+                  minimumSigning: 15,
+                  writtenLine: 20,
+                  signedLine: 20,
+                  boundPremiumShare: 500_000,
+                  estGrossPremiumShare: 2_000_000,
+                  launchAttempts: 1,
+              }
+            : {
+                  description: 'Layer 2',
+                  policyLimit: 35_000_000,
+                  excess: 1_000_000,
+                  minimumSigning: 10,
+                  writtenLine: 25,
+                  signedLine: 25,
+                  boundPremiumShare: 875_000,
+                  estGrossPremiumShare: 3_500_000,
+                  launchAttempts: 2,
+              };
+
     return {
-        description: 'Layer 1',
-        policyLimit: 20_000_000,
-        excess: 500_000,
-        minimumSigning: 15,
-        writtenLine: 20,
-        signedLine: 20,
-        boundPremiumShare: 500_000,
-        estGrossPremiumShare: 2_000_000,
-        launchAttempts: 1,
+        ...base,
         satelliteName: `test satellite ${faker.string.alphanumeric(6)}`,
         satelliteNameAlternative: faker.string.alphanumeric(6),
         lvServiceProvider: faker.string.alphanumeric(6),

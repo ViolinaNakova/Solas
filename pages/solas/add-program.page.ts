@@ -54,128 +54,167 @@ export class AddProgramPage {
         return this.page.getByRole('button', { name: 'Next step' });
     }
 
-    // ==================== Locators: Financial Layers (first/default layer) ====================
+    // ==================== Locators: Financial Layers ====================
+    // Plain numeric fields are keyed by array index (layers.N.*), which stays
+    // stable across layers. Dropdown/free-text fields are keyed by the layer's
+    // backend-assigned ID instead, which is dynamic and can change mid-flow (see
+    // Solas_AddProgram_Workflow.md); since DOM order matches layer index (verified
+    // live), positional (.nth) matching on the ID-agnostic attribute prefix is
+    // used for those instead of threading a captured ID through every call.
 
-    get policyLimitInput(): Locator {
-        return this.page.getByTestId('layers.0.PrimaryLimit-input');
+    get addLayerButton(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- no role/label/placeholder/testid exists; data-ref is the only stable attribute.
+        return this.page.locator('[data-ref="add-layer-button"]');
     }
 
-    get excessInput(): Locator {
-        return this.page.getByTestId('layers.0.PrimaryXs-input');
+    get currencyFields(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
+        return this.page.locator(
+            '[data-testid^="financial-layer-form-Currency-"]'
+        );
     }
 
-    get minimumSigningInput(): Locator {
-        return this.page.getByTestId('layers.0.MinimumSigningLine-input');
+    policyLimitInput(layerIndex: number): Locator {
+        return this.page.getByTestId(`layers.${layerIndex}.PrimaryLimit-input`);
     }
 
-    get writtenLineInput(): Locator {
-        return this.page.getByTestId('layers.0.WrittenLine-input');
+    excessInput(layerIndex: number): Locator {
+        return this.page.getByTestId(`layers.${layerIndex}.PrimaryXs-input`);
     }
 
-    get signedLineInput(): Locator {
-        return this.page.getByTestId('layers.0.SignedLine-input');
-    }
-
-    get boundPremiumInput(): Locator {
-        return this.page.getByTestId('layers.0.PremiumOverride-input');
-    }
-
-    get estGrossPremiumShareInput(): Locator {
+    minimumSigningInput(layerIndex: number): Locator {
         return this.page.getByTestId(
-            'layers.0.estimatedGrossPremiumShare-input'
+            `layers.${layerIndex}.MinimumSigningLine-input`
         );
     }
 
-    get launchAttemptsInput(): Locator {
-        return this.page.getByTestId('layers.0.launchAttempts-input');
+    writtenLineInput(layerIndex: number): Locator {
+        return this.page.getByTestId(`layers.${layerIndex}.WrittenLine-input`);
     }
 
-    // These fields are keyed by the layer's backend-assigned ID (which can change
-    // mid-flow -- see the "layer ID can change under a temp -1 layer" gotcha in
-    // Solas_AddProgram_Workflow.md). Since this page object only ever drives a
-    // single layer, a prefix match is used instead of threading a captured ID
-    // through every call, so these stay valid even if the real ID changes underneath.
+    signedLineInput(layerIndex: number): Locator {
+        return this.page.getByTestId(`layers.${layerIndex}.SignedLine-input`);
+    }
 
-    get descriptionInput(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-ref^="financial-layer-form-LayerDescription-"]'
+    boundPremiumInput(layerIndex: number): Locator {
+        return this.page.getByTestId(
+            `layers.${layerIndex}.PremiumOverride-input`
         );
     }
 
-    get rpiTypeTrigger(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-testid^="financial-layer-form-RpiTypeId-"]'
+    estGrossPremium100Input(layerIndex: number): Locator {
+        return this.page.getByTestId(
+            `layers.${layerIndex}.estimatedGrossPremium100-input`
         );
     }
 
-    get placingBasisTrigger(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-testid^="financial-layer-form-PlacingBasisId-"]'
+    estGrossPremiumShareInput(layerIndex: number): Locator {
+        return this.page.getByTestId(
+            `layers.${layerIndex}.estimatedGrossPremiumShare-input`
         );
     }
 
-    get leaderSyndicateTrigger(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-testid^="financial-layer-form-LeaderSyndicateId-"]'
+    launchAttemptsInput(layerIndex: number): Locator {
+        return this.page.getByTestId(
+            `layers.${layerIndex}.launchAttempts-input`
         );
     }
 
-    get launchVehicleTrigger(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-testid^="financial-layer-form-LaunchVehicleId-"]'
+    /**
+     * Resolves the layerIndex-th element matching an ID-agnostic attribute-prefix
+     * selector, since DOM order matches layer index for these dynamically-ID'd fields.
+     * @param {string} prefixSelector - A `[data-testid^="..."]` or `[data-ref^="..."]` CSS selector.
+     * @param {number} layerIndex - The 0-based layer index.
+     * @returns {Locator} The matching field for that layer.
+     */
+    nthLayerField(prefixSelector: string, layerIndex: number): Locator {
+        const matches = this.page.locator(prefixSelector);
+        // eslint-disable-next-line playwright/no-nth-methods -- DOM order matches layer index for these ID-agnostic fields.
+        return matches.nth(layerIndex);
+    }
+
+    descriptionInput(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-ref^="financial-layer-form-LayerDescription-"]',
+            layerIndex
         );
     }
 
-    get coverRequiredTrigger(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-testid^="financial-layer-form-CoverRequired-"]'
+    rpiTypeTrigger(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-testid^="financial-layer-form-RpiTypeId-"]',
+            layerIndex
         );
     }
 
-    get earningPatternTrigger(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-testid^="financial-layer-form-EarningPatternId-"]'
+    placingBasisTrigger(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-testid^="financial-layer-form-PlacingBasisId-"]',
+            layerIndex
         );
     }
 
-    get satelliteNameInput(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-ref^="financial-layer-form-satelliteName-"]'
+    leaderSyndicateTrigger(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-testid^="financial-layer-form-LeaderSyndicateId-"]',
+            layerIndex
         );
     }
 
-    get satelliteNameAlternativeInput(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-ref^="financial-layer-form-satelliteNameAlternative-"]'
+    launchVehicleTrigger(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-testid^="financial-layer-form-LaunchVehicleId-"]',
+            layerIndex
         );
     }
 
-    get lvServiceProviderInput(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-ref^="financial-layer-form-launchServiceProvider-"]'
+    coverRequiredTrigger(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-testid^="financial-layer-form-CoverRequired-"]',
+            layerIndex
         );
     }
 
-    get satelliteUsageInput(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator(
-            '[data-ref^="financial-layer-form-satelliteUsage-"]'
+    earningPatternTrigger(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-testid^="financial-layer-form-EarningPatternId-"]',
+            layerIndex
         );
     }
 
-    get umrInput(): Locator {
-        // eslint-disable-next-line playwright/no-raw-locators -- attribute-prefix match has no getByTestId equivalent.
-        return this.page.locator('[data-ref^="financial-layer-form-Umr-"]');
+    satelliteNameInput(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-ref^="financial-layer-form-satelliteName-"]',
+            layerIndex
+        );
+    }
+
+    satelliteNameAlternativeInput(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-ref^="financial-layer-form-satelliteNameAlternative-"]',
+            layerIndex
+        );
+    }
+
+    lvServiceProviderInput(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-ref^="financial-layer-form-launchServiceProvider-"]',
+            layerIndex
+        );
+    }
+
+    satelliteUsageInput(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-ref^="financial-layer-form-satelliteUsage-"]',
+            layerIndex
+        );
+    }
+
+    umrInput(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-ref^="financial-layer-form-Umr-"]',
+            layerIndex
+        );
     }
 
     get finalizeButton(): Locator {
@@ -209,20 +248,30 @@ export class AddProgramPage {
         attempts = 3
     ): Promise<void> {
         for (let attempt = 1; attempt <= attempts; attempt++) {
-            await this.nextStepButton.click();
-
-            try {
-                await expect(currentStepMarker).not.toBeVisible({
-                    timeout: 5000,
-                });
+            // Check before clicking: a prior attempt may have already advanced
+            // the wizard even if its own post-click check raced and errored --
+            // in that case "Next step" may have already relabeled to "Finalize"
+            // (a single shared button), so clicking it again would hang.
+            const stillOnStep = await currentStepMarker
+                .isVisible()
+                .catch(() => false);
+            if (!stillOnStep) {
                 return;
-            } catch {
-                if (attempt === attempts) {
-                    throw new Error(
-                        `Wizard did not advance past the current step after ${attempts} "Next step" clicks.`
-                    );
-                }
             }
+
+            await this.nextStepButton.click();
+            await currentStepMarker
+                .waitFor({ state: 'hidden', timeout: 5000 })
+                .catch(() => undefined);
+        }
+
+        const stillOnStep = await currentStepMarker
+            .isVisible()
+            .catch(() => false);
+        if (stillOnStep) {
+            throw new Error(
+                `Wizard did not advance past the current step after ${attempts} "Next step" clicks.`
+            );
         }
     }
 
@@ -239,25 +288,82 @@ export class AddProgramPage {
         typeText: string,
         exact = true
     ): Promise<void> {
-        await trigger.click();
-        await this.page.keyboard.type(typeText);
-
-        const matches = this.page.getByRole('option', {
-            name: typeText,
-            exact,
-        });
-        // eslint-disable-next-line playwright/no-nth-methods -- typed filter text can surface multiple partial matches; first is always intended.
-        const match = matches.first();
-        await expect(match).toBeVisible({ timeout: 15000 });
-
         // The option list is virtualized and can detach/reflow mid-click (see
-        // Solas_AddProgram_Workflow.md's Earning Pattern gotcha). Pressing Enter
-        // relies on the combobox's own fuzzy-highlight, which can select a
-        // *different* similarly-named option than the one just confirmed visible
-        // (e.g. "Sat in Orbit" instead of "Satellite Launch") -- force-clicking
-        // the exact match we already verified is more reliable than trusting Enter.
-        // eslint-disable-next-line playwright/no-force-option -- the virtualized list can report the option as unstable mid-reflow even though it's the correct, already-visible target.
-        await match.click({ force: true });
+        // Solas_AddProgram_Workflow.md's Earning Pattern gotcha), and pressing
+        // Enter relies on the combobox's own fuzzy-highlight, which can select a
+        // *different* similarly-named option than intended (e.g. "Sat in Orbit"
+        // instead of "Satellite Launch"). A forced click avoids that but risks
+        // clicking stale coordinates after a reflow, hitting the wrong option
+        // entirely. Re-querying the locator fresh on each retry and using a real
+        // (non-forced) click is the reliable middle ground.
+        //
+        // Selections have also been observed to silently revert to "Select an
+        // option" moments after a correct click (confirmed live on Broker and
+        // Law & Jurisdiction, not just Financial Layer fields), so the whole
+        // selection is verified against the trigger's own displayed text
+        // afterward, and retried from scratch if it did not stick.
+        const attempts = 3;
+        let lastError: unknown;
+
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+            try {
+                await trigger.click();
+                await this.page.keyboard.type(typeText);
+
+                const matches = this.page.getByRole('option', {
+                    name: typeText,
+                    exact,
+                });
+                // eslint-disable-next-line playwright/no-nth-methods -- typed filter text can surface multiple partial matches; first is always intended.
+                const match = matches.first();
+                await expect(match).toBeVisible({ timeout: 10000 });
+                await match.click({ timeout: 5000 });
+
+                // Selections have also been observed to silently revert to "Select
+                // an option" moments after a correct click (confirmed live on
+                // Broker and Law & Jurisdiction, not just Financial Layer fields).
+                await expect(trigger).toContainText(typeText, {
+                    timeout: 3000,
+                });
+                return;
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        throw new Error(
+            `Could not select "${typeText}" after ${attempts} attempts: ${String(lastError)}`
+        );
+    }
+
+    /**
+     * Fills a text/number input, tabs out to blur it, and verifies the value
+     * actually stuck, retrying if not -- plain fields have also been observed
+     * to silently revert or hold a stale/incorrect value after a fill (see
+     * Solas_AddProgram_Workflow.md). Commas from number formatting are
+     * stripped before comparing, since e.g. "20000000" renders as "20,000,000".
+     * @param {Locator} field - The input to fill.
+     * @param {string} value - The value to fill in.
+     * @returns {Promise<void>}
+     */
+    async fillAndVerify(field: Locator, value: string): Promise<void> {
+        const attempts = 3;
+
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+            await field.fill(value);
+            await field.press('Tab');
+
+            const current = (await field.inputValue()).replace(/,/g, '');
+            if (current === value) {
+                return;
+            }
+
+            if (attempt === attempts) {
+                throw new Error(
+                    `Value "${value}" did not stick after ${attempts} attempts (field held "${current}").`
+                );
+            }
+        }
     }
 
     /**
@@ -333,10 +439,72 @@ export class AddProgramPage {
     }
 
     /**
-     * Fills the default financial layer with the given sample data using the
-     * stable (non-modal) fields documented in Solas_AddProgram_Workflow.md for
-     * the Specialty/Space/Satellite Launch template. Earning Pattern is set
-     * last, since setting it earlier can be silently reset by later field changes.
+     * Clicks the "+" button to add a new financial layer and waits for it to render.
+     * @returns {Promise<void>}
+     */
+    async addFinancialLayer(): Promise<void> {
+        const countBefore = await this.currencyFields.count();
+        await this.addLayerButton.click();
+        await expect(this.currencyFields).toHaveCount(countBefore + 1);
+    }
+
+    /**
+     * Fills only the plain numeric fields of a financial layer (Policy Limit,
+     * Excess, Minimum Signing, Written/Signed Line, Bound Premium, Est Gross
+     * Premium Share). Exposed separately from fillFinancialLayer so an earlier
+     * layer's numeric fields can be re-filled after adding a later layer, which
+     * can silently scramble them (see Solas_AddProgram_Workflow.md's layer-swap
+     * gotcha).
+     * @param {number} layerIndex - The 0-based layer index.
+     * @param {SatelliteLaunchLayerData} data - Sample layer data from the program factory.
+     * @returns {Promise<void>}
+     */
+    async fillFinancialLayerNumericFields(
+        layerIndex: number,
+        data: SatelliteLaunchLayerData
+    ): Promise<void> {
+        await this.fillAndVerify(
+            this.policyLimitInput(layerIndex),
+            String(data.policyLimit)
+        );
+        await this.fillAndVerify(
+            this.excessInput(layerIndex),
+            String(data.excess)
+        );
+        await this.fillAndVerify(
+            this.minimumSigningInput(layerIndex),
+            String(data.minimumSigning)
+        );
+        await this.fillAndVerify(
+            this.writtenLineInput(layerIndex),
+            String(data.writtenLine)
+        );
+        await this.fillAndVerify(
+            this.signedLineInput(layerIndex),
+            String(data.signedLine)
+        );
+        await this.fillAndVerify(
+            this.boundPremiumInput(layerIndex),
+            String(data.boundPremiumShare)
+        );
+        await this.fillAndVerify(
+            this.estGrossPremiumShareInput(layerIndex),
+            String(data.estGrossPremiumShare)
+        );
+
+        // Est Gross Premium (100%) auto-calculates from the Share value above,
+        // but a large auto-computed 100% figure has been linked to the created
+        // program getting flagged "Marquee Client" -- pinning it to a nominal
+        // value avoids that (see Solas_AddProgram_Workflow.md).
+        await this.fillAndVerify(this.estGrossPremium100Input(layerIndex), '1');
+    }
+
+    /**
+     * Fills a financial layer with the given sample data using the stable
+     * (non-modal) fields documented in Solas_AddProgram_Workflow.md for the
+     * Specialty/Space/Satellite Launch template. Earning Pattern is set last,
+     * since setting it earlier can be silently reset by later field changes.
+     * @param {number} layerIndex - The 0-based layer index.
      * @param {SatelliteLaunchLayerData} data - Sample layer data from the program factory.
      * @param {string} launchVehicle - Exact Launch Vehicle option text.
      * @param {string} coverRequired - Exact Cover Required option text.
@@ -344,71 +512,106 @@ export class AddProgramPage {
      * @param {string} earningPattern - Text to filter the Earning Pattern option by (picks the first match).
      * @returns {Promise<void>}
      */
-    async fillFirstFinancialLayer(
+    async fillFinancialLayer(
+        layerIndex: number,
         data: SatelliteLaunchLayerData,
         launchVehicle: string,
         coverRequired: string,
         lloydsLeader: string,
         earningPattern: string
     ): Promise<void> {
-        await this.descriptionInput.fill(data.description);
-        await this.policyLimitInput.fill(String(data.policyLimit));
-        await this.policyLimitInput.press('Tab');
-        await this.excessInput.fill(String(data.excess));
-        await this.minimumSigningInput.fill(String(data.minimumSigning));
-        await this.writtenLineInput.fill(String(data.writtenLine));
-        await this.signedLineInput.fill(String(data.signedLine));
-        await this.boundPremiumInput.fill(String(data.boundPremiumShare));
-        await this.estGrossPremiumShareInput.fill(
-            String(data.estGrossPremiumShare)
+        await this.fillAndVerify(
+            this.descriptionInput(layerIndex),
+            data.description
         );
+        await this.fillFinancialLayerNumericFields(layerIndex, data);
 
         await this.selectSearchableOption(
-            this.rpiTypeTrigger,
+            this.rpiTypeTrigger(layerIndex),
             'New to Fidelis'
         );
         await this.selectSearchableOption(
-            this.placingBasisTrigger,
+            this.placingBasisTrigger(layerIndex),
             'Direct Open Market'
         );
 
         await this.selectSearchableOption(
-            this.leaderSyndicateTrigger,
+            this.leaderSyndicateTrigger(layerIndex),
             lloydsLeader,
             false
         );
         await this.selectSearchableOption(
-            this.launchVehicleTrigger,
+            this.launchVehicleTrigger(layerIndex),
             launchVehicle
         );
 
         await this.selectSearchableOption(
-            this.coverRequiredTrigger,
+            this.coverRequiredTrigger(layerIndex),
             coverRequired
         );
 
-        await this.launchAttemptsInput.fill(String(data.launchAttempts));
-        await this.satelliteNameInput.fill(data.satelliteName);
-        await this.satelliteNameAlternativeInput.fill(
+        await this.fillAndVerify(
+            this.launchAttemptsInput(layerIndex),
+            String(data.launchAttempts)
+        );
+        await this.fillAndVerify(
+            this.satelliteNameInput(layerIndex),
+            data.satelliteName
+        );
+        await this.fillAndVerify(
+            this.satelliteNameAlternativeInput(layerIndex),
             data.satelliteNameAlternative
         );
-        await this.lvServiceProviderInput.fill(data.lvServiceProvider);
-        await this.satelliteUsageInput.fill(data.satelliteUsage);
-        await this.umrInput.fill(data.umr);
+        await this.fillAndVerify(
+            this.lvServiceProviderInput(layerIndex),
+            data.lvServiceProvider
+        );
+        await this.fillAndVerify(
+            this.satelliteUsageInput(layerIndex),
+            data.satelliteUsage
+        );
+        await this.fillAndVerify(this.umrInput(layerIndex), data.umr);
 
         await this.selectSearchableOption(
-            this.earningPatternTrigger,
+            this.earningPatternTrigger(layerIndex),
             earningPattern,
             false
         );
     }
 
     /**
-     * Advances past the Financial Layers step, persisting the layer to the backend.
+     * Advances past the Financial Layers step, persisting the layers to the
+     * backend. The "Next step"/"Finalize" action can be the same underlying
+     * button that relabels mid-transition, so this waits directly for the
+     * Finalize button (an unambiguous arrival signal) rather than for the old
+     * step's marker to hide.
      * @returns {Promise<void>}
      */
     async saveFinancialLayers(): Promise<void> {
-        await this.advancePastStep(this.policyLimitInput);
+        const attempts = 3;
+
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+            const alreadyOnFiles = await this.finalizeButton
+                .isVisible()
+                .catch(() => false);
+            if (alreadyOnFiles) {
+                return;
+            }
+
+            await this.nextStepButton.click();
+            await this.finalizeButton
+                .waitFor({ state: 'visible', timeout: 5000 })
+                .catch(() => undefined);
+        }
+
+        const arrived = await this.finalizeButton
+            .isVisible()
+            .catch(() => false);
+        if (!arrived) {
+            throw new Error(
+                'Wizard did not advance to the Files step after clicking "Next step".'
+            );
+        }
     }
 
     /**

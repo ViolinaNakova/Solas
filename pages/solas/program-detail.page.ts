@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 export class ProgramDetailPage {
     constructor(private readonly page: Page) {}
@@ -21,10 +21,14 @@ export class ProgramDetailPage {
         return this.page.getByRole('button', { name: 'Declined' });
     }
 
+    get declineDialog(): Locator {
+        return this.page.getByRole('dialog', { name: 'Decline Program' });
+    }
+
     get declinatureReasonTrigger(): Locator {
-        return this.page
-            .getByRole('dialog', { name: 'Decline Program' })
-            .getByRole('button', { name: 'Select an option' });
+        return this.declineDialog.getByRole('button', {
+            name: 'Select an option',
+        });
     }
 
     get declinatureRationaleInput(): Locator {
@@ -71,18 +75,46 @@ export class ProgramDetailPage {
      * @returns {Promise<void>}
      */
     async decline(): Promise<void> {
-        await this.declinedButton.click();
+        // Each step below checks whether it's already done before acting, so this
+        // is safe to call after a partial prior failure (e.g. the dialog already
+        // open, or a reason already selected) instead of blindly restarting --
+        // re-clicking "Declined" while its dialog is already open would just fail,
+        // since the dialog overlay covers that button.
+        const dialogAlreadyOpen = await this.declineDialog
+            .isVisible()
+            .catch(() => false);
 
-        await this.declinatureReasonTrigger.click();
-        const reasons = this.page.getByRole('option');
-        // eslint-disable-next-line playwright/no-nth-methods -- any reason is acceptable for cleanup; first is fine.
-        await reasons.first().click();
+        if (!dialogAlreadyOpen) {
+            await this.declinedButton.click();
+            await expect(this.declineDialog).toBeVisible({ timeout: 10000 });
+        }
+
+        // Once a reason is picked, the trigger's accessible name changes from
+        // "Select an option" to the picked reason, so this naturally becomes false.
+        const reasonNotYetSelected = await this.declinatureReasonTrigger
+            .isVisible()
+            .catch(() => false);
+
+        if (reasonNotYetSelected) {
+            await this.declinatureReasonTrigger.click({ timeout: 5000 });
+
+            const reasons = this.page.getByRole('option');
+            // eslint-disable-next-line playwright/no-nth-methods -- any reason is acceptable for cleanup; first is fine.
+            const firstReason = reasons.first();
+
+            await expect(firstReason).toBeVisible({ timeout: 5000 });
+            await firstReason.click({ timeout: 5000 });
+            // The reason dropdown's own popover overlays the dialog and
+            // intercepts clicks on Confirm until it fully closes.
+            await expect(firstReason).not.toBeVisible({ timeout: 5000 });
+        }
 
         await this.declinatureRationaleInput.fill(
-            'Test cleanup - automated E2E test'
+            'Test cleanup - automated E2E test',
+            { timeout: 5000 }
         );
-        await this.rationaleInput.fill('Test cleanup');
+        await this.rationaleInput.fill('Test cleanup', { timeout: 5000 });
 
-        await this.declineConfirmButton.click();
+        await this.declineConfirmButton.click({ timeout: 5000 });
     }
 }
