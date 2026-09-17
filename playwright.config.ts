@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
+import { StorageStatePaths } from './enums/solas/storage-state-paths';
 
 /**
  * Load environment variables from .env file.
@@ -41,10 +42,10 @@ export default defineConfig({
     /* Shared settings for all projects */
     use: {
         /* Base URL - uncomment and set if using relative URLs */
-        // baseURL: process.env.APP_URL,
+        baseURL: process.env.APP_URL,
 
         /* Set to the attribute your app under test exposes test ids with */
-        testIdAttribute: 'data-test',
+        testIdAttribute: 'data-testid',
 
         /* Collect trace when retrying the failed test */
         trace: 'on-first-retry',
@@ -98,7 +99,9 @@ export default defineConfig({
         {
             name: 'chromium',
             testIgnore: /.*\/api\/.*\.spec\.ts/,
+            dependencies: ['setup'],
             use: {
+                storageState: StorageStatePaths.SOLAS,
                 ...devices['Desktop Chrome'],
                 viewport: { width: 1920, height: 1080 },
             },

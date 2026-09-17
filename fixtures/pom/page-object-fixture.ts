@@ -1,4 +1,7 @@
 import { test as base } from '@playwright/test';
+import { SubmissionsPage } from '../../pages/solas/submissions.page';
+import { AddProgramPage } from '../../pages/solas/add-program.page';
+import { ProgramDetailPage } from '../../pages/solas/program-detail.page';
 
 /**
  * Framework fixtures for page objects.
@@ -15,6 +18,9 @@ import { test as base } from '@playwright/test';
  * ```
  */
 export type FrameworkFixtures = {
+    submissionsPage: SubmissionsPage;
+    addProgramPage: AddProgramPage;
+    programDetailPage: ProgramDetailPage;
     resetStorageState: () => Promise<void>;
 };
 
@@ -37,6 +43,18 @@ export const test = base.extend<FrameworkFixtures>({
     // appPage: async ({ page }, use) => {
     //     await use(new AppPage(page));
     // },
+
+    submissionsPage: async ({ page }, use) => {
+        await use(new SubmissionsPage(page));
+    },
+
+    addProgramPage: async ({ page }, use) => {
+        await use(new AddProgramPage(page));
+    },
+
+    programDetailPage: async ({ page }, use) => {
+        await use(new ProgramDetailPage(page));
+    },
 
     resetStorageState: async ({ context }, use) => {
         await use(async () => {
