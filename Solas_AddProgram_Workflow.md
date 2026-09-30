@@ -477,3 +477,49 @@ Steps taken:
 5. **Result**: rendered UI shows **Belongs to pool = No**, **Pool = "-"**. Raw API response confirms: `"belongsToPool": null, "terrorPoolId": null, "isReinsurancePool": null`.
 
 This directly contradicts the most recent Jira comment on NGUI-3388 (2026-09-17, Marijana Pancevski) stating "we had this data saved every time on QA" — that comment's testing used **UpsertProgram** with (per her account) no reproduction; this run also used UpsertProgram (confirmed via network log, the UI never calls a separate `CreateProgram` endpoint) and still saw the values come back `null`. **Recommend re-flagging NGUI-3388 as still open** with program 449217 as fresh repro evidence, since the ticket may have been prematurely considered resolved.
+
+## Run 9 (2026-09-30) — Reinsurance / Marine / Africa / Retro Agg (program 410199)
+
+- Environment: `https://qa-01.tfpuw.com`. Explored with `playwright-cli` using the saved storage state (no fresh login needed).
+- Program created: **410199 – HELIOS KLINIKEN GMBH**, Reinsurance / Marine / Africa / **Retro Agg** (mapping code **MRR**, category chain "Marine -> Marine Treaty Reinsurance -> Marine Retro"). "Retro Agg" exists verbatim; the other Program Types for Reinsurance / Marine are Excess of Loss, Retro OCC, War.
+- Layer IDs: 584620 (Layer 1, Fidelis IG - FUL), 584632 (Layer 2, Fidelis IG - FUL), 584635 (Layer 3, Clone of Layer 1 onto Syndicate 3123 - UK - 2026).
+- Automated as `tests/solas/create program/create-program-reinsurance-marine-retro-agg.spec.ts` (2 layers, stable non-modal fields only).
+
+### What differed from earlier runs
+- **Initial Details, Dates & Restrictions and Underwriting Status are one page** for this template (single "Next step"). Required: Client, Broker, Placing Office, Underwriter. Law & Jurisdiction is **not** required. Cession Consideration was set to "N/A" (see the Run 8 backend 400 gotcha). Modelling was pre-filled with "Awaiting Data".
+- **Select Perils is required** — the step shows "One or more perils must be selected" and "Next step" stays disabled until one is picked. Used `TC` (arbitrary; the peril buttons have no tooltip/label beyond the code).
+- **Financial Layer field set** is the Reinsurance treaty one (same family as Aggregate XL): Policy Limit and Excess are `aggregateLimit` / `aggregateExcess`; there is no Est Gross Premium (Share) field, and Est Gross Premium (100%) stays at 0 (no "Marquee Client" overwrite needed). Placing Basis is pre-filled with "Aggregate Excess of Loss". Required and blank on Layer 1: Policy Limit, Period Basis.
+- **A layer added via "+" inherits** Placing Basis, Period Basis, Earning Pattern and Placement Type from the previous layer; RPI Type is not inherited.
+- **Clone modal only offered Lloyd's syndicates** (Syndicate 3123 / 2126) as Carrier Binder, so ROFR Decision, Risk Allocation Rationale and then Lloyd's Risk Codes were all required for Layer 3. The risk-code modal starts **empty** on this template (click "Add Code", pick a code, set 100%) rather than pre-populated with zero rows. Used `3T` at 100% (synthetic). The clone did not carry over Minimum Signing (blank) and duplicated the UMR; both were set by hand.
+- **Modal fields persisted** via real click + type + Apply and were confirmed after a hard reload: Deductions (Brokerage 5% / 4.5%), RPI & RARC (78% / 45%), GELR (15% / 16%), Leader (Fidelis Overall Lead).
+- **Post-finalize banners**: Compliance License Check ("Yes - Must not solicit business; and must be done on a cross-border basis.") and a red **Max Policy Length Breach** — "F3123: Current policy length (12 months) exceeds limit (0 months)" — caused by Layer 3's syndicate binder.
+- **Live totals after finalize: Exposure 0 | Premium 1,875,000 | RoL 0.0000%.** Exposure stayed 0 on this template; not investigated.
+
+### Root cause of the "adding a second layer swaps the first layer's fields" gotcha (Run 6)
+After clicking **+**, the new layer takes index `0` in the `layers.N.*` test ids while it renders as the **last** column; the existing layer's inputs become `layers.1.*`. The values themselves do not move — only the index does — so anything addressing fields by `layers.N` writes to the wrong column once a second layer exists. **Locate layer fields by on-screen column position** (n-th element matching the field's test-id suffix) instead of by the `layers.N` index.
+
+### Sample data used — Reinsurance / Marine / Retro Agg (Layer 1 / Layer 2 / Layer 3)
+| Field | Layer 1 | Layer 2 | Layer 3 (Clone of Layer 1) |
+|---|---|---|---|
+| Description | Layer 1 | Layer 2 | Layer 3 |
+| Carrier Binder | Fidelis IG - FUL (default) | Fidelis IG - FUL (default) | Syndicate 3123 - UK - 2026 |
+| Lloyd's Risk Codes | — | — | 3T, 100% |
+| Policy Limit | 20,000,000 | 35,000,000 | 20,000,000 (cloned) |
+| Excess | 500,000 | 1,000,000 | 500,000 (cloned) |
+| Minimum Signing | 15% | 10% | 15% (set by hand) |
+| Written Line / Signed Line | 20% / 20% | 25% / 25% | 20% / 20% (cloned) |
+| Bound Premium (Share) | 500,000 | 875,000 | 500,000 (cloned) |
+| Deductions (Brokerage) | 5% | 4.5% | 5% (cloned) |
+| Commissions (auto) | 14.5% | 14.5% | 13% |
+| RPI & RARC (Quoted RPI) | 78% | 45% | 78% (cloned) |
+| RPI Type | New to Fidelis | New to Fidelis | New to Fidelis (cloned) |
+| GELR% (non-CAT) | 15% | 16% | 15% (cloned) |
+| Leader | Fidelis | Fidelis | Fidelis (cloned) |
+| Placing Basis | Aggregate Excess of Loss (default) | Aggregate Excess of Loss (inherited) | Aggregate Excess of Loss (cloned) |
+| Period Basis | LOD | LOD (inherited) | LOD (cloned) |
+| Earning Pattern | Standard | Standard (inherited) | Standard (cloned) |
+| Placement Type | N/A | N/A (inherited) | N/A (cloned) |
+| UMR | UMR-TEST-001 | UMR-TEST-002 | UMR-TEST-003 |
+
+### Known gotcha (NEW in Run 9): the auth setup check can fail on a stale-but-valid storage state
+With a storage state more than a day old, the app silently renews its tokens on first load and the Submissions page took ~12s to render — longer than the 10s assertion in `tests/solas/auth.setup.ts`, which then reports "Session appears expired". If the session still works in `playwright-cli` (load the state, open `/submissions`, wait for "Add a New Program"), run `state-save .auth/solas/appStorageState.json` to store the renewed tokens; the setup check then passes in ~7s.

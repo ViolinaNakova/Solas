@@ -10,6 +10,13 @@ export class ProgramDetailPage {
         return this.page.getByRole('heading', { level: 3 });
     }
 
+    get programTypeBadge(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- header badge has no role/label/testid, only data-ref; the same text also appears in the Details panel.
+        return this.page.locator(
+            '[data-ref="ProgramPageHeader-program-type-badge"]'
+        );
+    }
+
     get detailsTab(): Locator {
         return this.page.getByRole('tab', { name: 'Details' });
     }

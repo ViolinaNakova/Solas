@@ -62,6 +62,55 @@ export function generateSatelliteLaunchLayer(
     };
 }
 
+export type ReinsuranceTreatyLayerData = {
+    description: string;
+    policyLimit: number;
+    excess: number;
+    minimumSigning: number;
+    writtenLine: number;
+    signedLine: number;
+    boundPremiumShare: number;
+    umr: string;
+};
+
+/**
+ * Generates sample data for a Reinsurance treaty financial layer (e.g.
+ * Marine / Retro Agg), following the documented Reinsurance sample-data
+ * pattern in Solas_AddProgram_Workflow.md. The UMR is randomized per run to
+ * avoid colliding with prior test data.
+ * @param {1 | 2} layerNumber - Which documented layer's sample values to use.
+ * @returns {ReinsuranceTreatyLayerData} Sample data for that layer.
+ */
+export function generateReinsuranceTreatyLayer(
+    layerNumber: 1 | 2
+): ReinsuranceTreatyLayerData {
+    const base =
+        layerNumber === 1
+            ? {
+                  description: 'Layer 1',
+                  policyLimit: 20_000_000,
+                  excess: 500_000,
+                  minimumSigning: 15,
+                  writtenLine: 20,
+                  signedLine: 20,
+                  boundPremiumShare: 500_000,
+              }
+            : {
+                  description: 'Layer 2',
+                  policyLimit: 35_000_000,
+                  excess: 1_000_000,
+                  minimumSigning: 10,
+                  writtenLine: 25,
+                  signedLine: 25,
+                  boundPremiumShare: 875_000,
+              };
+
+    return {
+        ...base,
+        umr: `UMR-TEST-${faker.string.numeric(6)}`,
+    };
+}
+
 export type PVWarTerrorReProgramData = {
     terrorTiv: number;
     biTiv: number;

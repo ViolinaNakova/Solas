@@ -1,5 +1,8 @@
 import { expect, Locator, Page } from '@playwright/test';
-import { SatelliteLaunchLayerData } from '../../test-data/factories/solas/program.factory';
+import {
+    ReinsuranceTreatyLayerData,
+    SatelliteLaunchLayerData,
+} from '../../test-data/factories/solas/program.factory';
 
 export class AddProgramPage {
     constructor(private readonly page: Page) {}
@@ -8,6 +11,11 @@ export class AddProgramPage {
     // Class of Business, Line of Business, Program Type and Placing Office triggers
     // expose neither a role/label/placeholder nor a data-testid in this app -- data-ref
     // is the only stable identifier available, used here as the sanctioned last resort.
+
+    get classOfBusinessTrigger(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- no role/label/placeholder/testid exists; data-ref is the only stable attribute.
+        return this.page.locator('[data-ref="classOfBusiness-input-trigger"]');
+    }
 
     get lineOfBusinessTrigger(): Locator {
         // eslint-disable-next-line playwright/no-raw-locators -- no role/label/placeholder/testid exists; data-ref is the only stable attribute.
@@ -86,6 +94,16 @@ export class AddProgramPage {
         return this.page.getByTestId('terrorPoolId-input');
     }
 
+    // ==================== Locators: Select Perils ====================
+
+    get perilsHeading(): Locator {
+        return this.page.getByRole('heading', { name: 'Perils' });
+    }
+
+    perilButton(perilCode: string): Locator {
+        return this.page.getByRole('button', { name: perilCode, exact: true });
+    }
+
     // ==================== Locators: Financial Layers ====================
     // Plain numeric fields are keyed by array index (layers.N.*), which stays
     // stable across layers. Dropdown/free-text fields are keyed by the layer's
@@ -160,6 +178,19 @@ export class AddProgramPage {
     treatyPolicyLimitInput(layerIndex: number): Locator {
         return this.page.getByTestId(
             `layers.${layerIndex}.aggregateLimit-input`
+        );
+    }
+
+    // Reinsurance treaty templates (e.g. Marine / Retro Agg) are located by
+    // on-screen column position instead of the `layers.N.*` index: clicking "+"
+    // gives the NEW layer index 0 while it renders as the last column (verified
+    // live on program 410199), so the index does not identify a column once a
+    // second layer exists.
+
+    treatyColumnInput(fieldName: string, columnIndex: number): Locator {
+        return this.nthLayerField(
+            `input[data-testid$=".${fieldName}-input"]`,
+            columnIndex
         );
     }
 
@@ -387,6 +418,27 @@ export class AddProgramPage {
     }
 
     /**
+     * Selects an option in a searchable dropdown only when it is not already
+     * the displayed value -- templates pre-fill some dropdowns (e.g. Placing
+     * Basis, and Period Basis on a layer added via "+"), and re-picking an
+     * already-selected option is unnecessary churn on a flaky control.
+     * @param {Locator} trigger - The combobox trigger to check/open.
+     * @param {string} optionText - Exact option text expected to be selected.
+     * @returns {Promise<void>}
+     */
+    async ensureOptionSelected(
+        trigger: Locator,
+        optionText: string
+    ): Promise<void> {
+        const current = (await trigger.innerText()).trim();
+        if (current === optionText) {
+            return;
+        }
+
+        await this.selectSearchableOption(trigger, optionText);
+    }
+
+    /**
      * Fills a text/number input, tabs out to blur it, and verifies the value
      * actually stuck, retrying if not -- plain fields have also been observed
      * to silently revert or hold a stale/incorrect value after a fill (see
@@ -403,8 +455,14 @@ export class AddProgramPage {
             await field.fill(value);
             await field.press('Tab');
 
+            // Percentage fields re-render with padded decimals (e.g. "15" ->
+            // "15.0000000"), so numeric values are compared numerically.
             const current = (await field.inputValue()).replace(/,/g, '');
-            if (current === value) {
+            const sameNumber =
+                value.trim() !== '' &&
+                current.trim() !== '' &&
+                Number(current) === Number(value);
+            if (current === value || sameNumber) {
                 return;
             }
 
@@ -418,17 +476,26 @@ export class AddProgramPage {
 
     /**
      * Fills the "Add a New Program" characteristics dialog and submits it.
-     * Class of Business defaults to "Specialty" and is left untouched.
+     * Class of Business defaults to "Specialty" and is left untouched unless
+     * a different value is passed.
      * @param {string} lineOfBusiness - Exact Line of Business option text (e.g. "Space").
      * @param {string} zone - Exact Zone option text (e.g. "Africa").
      * @param {string} programType - Exact Program Type option text (e.g. "Satellite Launch").
+     * @param {string} classOfBusiness - Optional exact Class of Business option text (e.g. "Reinsurance").
      * @returns {Promise<void>}
      */
     async createProgram(
         lineOfBusiness: string,
         zone: string,
-        programType: string
+        programType: string,
+        classOfBusiness?: string
     ): Promise<void> {
+        if (classOfBusiness) {
+            await this.ensureOptionSelected(
+                this.classOfBusinessTrigger,
+                classOfBusiness
+            );
+        }
         await this.selectSearchableOption(
             this.lineOfBusinessTrigger,
             lineOfBusiness
@@ -558,6 +625,63 @@ export class AddProgramPage {
         );
 
         await this.advancePastStep(this.clientInput);
+    }
+
+    /**
+     * Fills the Initial Details required by Reinsurance templates (Client,
+     * Broker, Cession Consideration, Placing Office, Underwriter) and advances
+     * to the next step. Law & Jurisdiction is not required on these templates;
+     * Cession Consideration is always set because the backend rejects a null
+     * value on create (see Solas_AddProgram_Workflow.md "Run 8").
+     * @param {string} client - Text to search the Client combobox by (partial match).
+     * @param {string} broker - Text to search the Broker combobox by (partial match).
+     * @param {string} cessionConsideration - Exact Cession Consideration option text (e.g. "N/A").
+     * @param {string} placingOffice - Exact Placing Office option text.
+     * @param {string} underwriter - Text to filter the Underwriter option by (picks the first match).
+     * @returns {Promise<void>}
+     */
+    async fillInitialDetailsForReinsuranceProgram(
+        client: string,
+        broker: string,
+        cessionConsideration: string,
+        placingOffice: string,
+        underwriter: string
+    ): Promise<void> {
+        await this.selectSearchableOption(this.clientInput, client, false);
+        await this.selectSearchableOption(this.brokerInput, broker, false);
+        await this.selectSearchableOption(
+            this.cessionConsiderationTrigger,
+            cessionConsideration
+        );
+        await this.selectSearchableOption(
+            this.placingOfficeTrigger,
+            placingOffice
+        );
+        await this.selectSearchableOption(
+            this.underwriterInput,
+            underwriter,
+            false
+        );
+
+        await this.advancePastStep(this.clientInput);
+    }
+
+    /**
+     * Selects the given perils on the Select Perils step and advances to the
+     * next step. Required on templates where at least one peril must be
+     * selected before "Next step" is enabled (e.g. Reinsurance / Marine).
+     * @param {string[]} perilCodes - Peril codes to select, as shown on the buttons (e.g. "TC").
+     * @returns {Promise<void>}
+     */
+    async selectPerils(perilCodes: string[]): Promise<void> {
+        await expect(this.perilsHeading).toBeVisible();
+
+        for (const perilCode of perilCodes) {
+            await this.perilButton(perilCode).click();
+        }
+
+        await expect(this.nextStepButton).toBeEnabled();
+        await this.advancePastStep(this.perilsHeading);
     }
 
     /**
@@ -741,6 +865,87 @@ export class AddProgramPage {
         await this.selectSearchableOption(
             this.periodBasisTrigger(layerIndex),
             periodBasis
+        );
+    }
+
+    /**
+     * Fills only the plain numeric fields of a Reinsurance treaty layer (Policy
+     * Limit, Excess, Minimum Signing, Written/Signed Line, Bound Premium).
+     * Exposed separately so an earlier layer can be re-filled after adding a
+     * later one, which can silently scramble them (see
+     * Solas_AddProgram_Workflow.md's layer-swap gotcha).
+     * @param {number} columnIndex - The 0-based on-screen layer column.
+     * @param {ReinsuranceTreatyLayerData} data - Sample layer data from the program factory.
+     * @returns {Promise<void>}
+     */
+    async fillReinsuranceTreatyLayerNumericFields(
+        columnIndex: number,
+        data: ReinsuranceTreatyLayerData
+    ): Promise<void> {
+        await this.fillAndVerify(
+            this.treatyColumnInput('aggregateLimit', columnIndex),
+            String(data.policyLimit)
+        );
+        await this.fillAndVerify(
+            this.treatyColumnInput('aggregateExcess', columnIndex),
+            String(data.excess)
+        );
+        await this.fillAndVerify(
+            this.treatyColumnInput('MinimumSigningLine', columnIndex),
+            String(data.minimumSigning)
+        );
+        await this.fillAndVerify(
+            this.treatyColumnInput('WrittenLine', columnIndex),
+            String(data.writtenLine)
+        );
+        await this.fillAndVerify(
+            this.treatyColumnInput('SignedLine', columnIndex),
+            String(data.signedLine)
+        );
+        await this.fillAndVerify(
+            this.treatyColumnInput('PremiumOverride', columnIndex),
+            String(data.boundPremiumShare)
+        );
+    }
+
+    /**
+     * Fills a Reinsurance treaty financial layer (e.g. Marine / Retro Agg) with
+     * the stable non-modal fields: Description, the plain numeric fields, UMR,
+     * RPI Type, Period Basis and Earning Pattern. Placing Basis is pre-filled by
+     * the template and left as-is. Earning Pattern is set last, since setting
+     * it earlier can be silently reset by later field changes.
+     * @param {number} columnIndex - The 0-based on-screen layer column.
+     * @param {ReinsuranceTreatyLayerData} data - Sample layer data from the program factory.
+     * @param {string} rpiType - Exact RPI Type option text.
+     * @param {string} periodBasis - Exact Period Basis option text.
+     * @param {string} earningPattern - Exact Earning Pattern option text.
+     * @returns {Promise<void>}
+     */
+    async fillReinsuranceTreatyLayer(
+        columnIndex: number,
+        data: ReinsuranceTreatyLayerData,
+        rpiType: string,
+        periodBasis: string,
+        earningPattern: string
+    ): Promise<void> {
+        await this.fillAndVerify(
+            this.descriptionInput(columnIndex),
+            data.description
+        );
+        await this.fillReinsuranceTreatyLayerNumericFields(columnIndex, data);
+        await this.fillAndVerify(this.umrInput(columnIndex), data.umr);
+
+        await this.ensureOptionSelected(
+            this.rpiTypeTrigger(columnIndex),
+            rpiType
+        );
+        await this.ensureOptionSelected(
+            this.periodBasisTrigger(columnIndex),
+            periodBasis
+        );
+        await this.ensureOptionSelected(
+            this.earningPatternTrigger(columnIndex),
+            earningPattern
         );
     }
 
