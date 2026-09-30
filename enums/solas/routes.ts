@@ -9,4 +9,6 @@ export enum Routes {
     TASKS = '/tasks',
     NOTES = '/notes',
     PROGRAM_ADD = '/programs/add',
+    /** Base path for an existing program's edit view; build as `${PROGRAM_EDIT}/{id}/edit?tab=details`. */
+    PROGRAM_EDIT = '/programs',
 }

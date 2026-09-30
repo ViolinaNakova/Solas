@@ -54,6 +54,38 @@ export class AddProgramPage {
         return this.page.getByRole('button', { name: 'Next step' });
     }
 
+    // ==================== Locators: Initial Details (Terror-specific) ====================
+    // Political Violence War & Terror Re (and similar Terror Line of Business
+    // templates) add these fields to Initial Details -- see
+    // Solas_AddProgram_Workflow.md "Run 8".
+
+    get terrorTivInput(): Locator {
+        return this.page.getByTestId('terrorTiv-input');
+    }
+
+    get biTivInput(): Locator {
+        return this.page.getByTestId('biTiv-input');
+    }
+
+    get airOccCodeTrigger(): Locator {
+        return this.page.getByTestId('airCode-input');
+    }
+
+    get cessionConsiderationTrigger(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- no role/label/placeholder/testid exists; data-ref is the only stable attribute.
+        return this.page.locator(
+            '[data-ref="cessionConsideration-input-trigger"]'
+        );
+    }
+
+    get belongsToPoolToggle(): Locator {
+        return this.page.getByTestId('belongsToPool-input');
+    }
+
+    get poolTrigger(): Locator {
+        return this.page.getByTestId('terrorPoolId-input');
+    }
+
     // ==================== Locators: Financial Layers ====================
     // Plain numeric fields are keyed by array index (layers.N.*), which stays
     // stable across layers. Dropdown/free-text fields are keyed by the layer's
@@ -117,6 +149,24 @@ export class AddProgramPage {
     launchAttemptsInput(layerIndex: number): Locator {
         return this.page.getByTestId(
             `layers.${layerIndex}.launchAttempts-input`
+        );
+    }
+
+    // ==================== Locators: Financial Layers (Treaty template) ====================
+    // PV Treaty/Terrorism Treaty Program Types use a distinct spreadsheet-style
+    // layer grid with its own field set (see Solas_AddProgram_Workflow.md "Run 8"),
+    // sharing only Placing Basis with the Satellite Launch template.
+
+    treatyPolicyLimitInput(layerIndex: number): Locator {
+        return this.page.getByTestId(
+            `layers.${layerIndex}.aggregateLimit-input`
+        );
+    }
+
+    periodBasisTrigger(layerIndex: number): Locator {
+        return this.nthLayerField(
+            '[data-testid^="financial-layer-form-PeriodBasisId-"]',
+            layerIndex
         );
     }
 
@@ -427,6 +477,90 @@ export class AddProgramPage {
     }
 
     /**
+     * Fills the Terror-specific Initial Details fields (Terror TIV, B.I. TIV,
+     * AIR Occ. Code, Cession Consideration) required by Political Violence War
+     * & Terror Re and similar Terror Line of Business templates.
+     * @param {string} terrorTiv - Terror TIV numeric value.
+     * @param {string} biTiv - B.I. TIV numeric value.
+     * @returns {Promise<void>}
+     */
+    async fillTerrorFields(terrorTiv: string, biTiv: string): Promise<void> {
+        await this.fillAndVerify(this.terrorTivInput, terrorTiv);
+        await this.fillAndVerify(this.biTivInput, biTiv);
+        await this.selectSearchableOption(
+            this.airOccCodeTrigger,
+            '301 - Residential - General residential'
+        );
+
+        // Cession Consideration has no required-field marker in the UI, but the
+        // backend rejects a null CessionOpportunityTypeId with an HTTP 400 on
+        // create (see Solas_AddProgram_Workflow.md "Run 8") -- always set it,
+        // even to the semantically-empty "N/A" option.
+        await this.selectSearchableOption(
+            this.cessionConsiderationTrigger,
+            'N/A'
+        );
+    }
+
+    /**
+     * Toggles "Belongs to pool" on and selects a Pool value, which reveals the
+     * Pool dropdown. Used to exercise the NGUI-3388 pool-persistence check.
+     * @param {string} pool - Exact Pool option text (e.g. "Domestic").
+     * @returns {Promise<void>}
+     */
+    async setBelongsToPool(pool: string): Promise<void> {
+        await this.belongsToPoolToggle.click();
+        await this.selectSearchableOption(this.poolTrigger, pool);
+    }
+
+    /**
+     * Fills the Initial Details required for Political Violence War & Terror Re
+     * (and similar Terror Line of Business) templates: Client, Broker, Law &
+     * Jurisdiction, Terror fields, Belongs to Pool/Pool, Placing Office, and
+     * Underwriter -- then advances to the next step.
+     * @param {string} client - Text to search the Client combobox by (partial match).
+     * @param {string} broker - Text to search the Broker combobox by (partial match).
+     * @param {string} lawJurisdiction - Text to filter the Law & Jurisdiction option by (this template uses a country/state picker, e.g. "England").
+     * @param {string} terrorTiv - Terror TIV numeric value.
+     * @param {string} biTiv - B.I. TIV numeric value.
+     * @param {string} placingOffice - Exact Placing Office option text.
+     * @param {string} underwriter - Text to filter the Underwriter option by (picks the first match).
+     * @param {string} pool - Exact Pool option text to select after toggling Belongs to Pool on.
+     * @returns {Promise<void>}
+     */
+    async fillInitialDetailsForTerrorProgram(
+        client: string,
+        broker: string,
+        lawJurisdiction: string,
+        terrorTiv: string,
+        biTiv: string,
+        placingOffice: string,
+        underwriter: string,
+        pool: string
+    ): Promise<void> {
+        await this.selectSearchableOption(this.clientInput, client, false);
+        await this.selectSearchableOption(this.brokerInput, broker, false);
+        await this.selectSearchableOption(
+            this.lawJurisdictionInput,
+            lawJurisdiction,
+            false
+        );
+        await this.fillTerrorFields(terrorTiv, biTiv);
+        await this.setBelongsToPool(pool);
+        await this.selectSearchableOption(
+            this.placingOfficeTrigger,
+            placingOffice
+        );
+        await this.selectSearchableOption(
+            this.underwriterInput,
+            underwriter,
+            false
+        );
+
+        await this.advancePastStep(this.clientInput);
+    }
+
+    /**
      * Skips the optional Select Perils step.
      * @returns {Promise<void>}
      */
@@ -576,6 +710,37 @@ export class AddProgramPage {
             this.earningPatternTrigger(layerIndex),
             earningPattern,
             false
+        );
+    }
+
+    /**
+     * Fills a Treaty-template financial layer's minimal required fields (Policy
+     * Limit, Placing Basis, Period Basis) -- the spreadsheet-style grid used by
+     * PV Treaty/Terrorism Treaty Program Types, distinct from the Satellite
+     * Launch modal-driven template (see Solas_AddProgram_Workflow.md "Run 8").
+     * @param {number} layerIndex - The 0-based layer index.
+     * @param {string} policyLimit - Policy Limit numeric value.
+     * @param {string} placingBasis - Exact Placing Basis option text.
+     * @param {string} periodBasis - Exact Period Basis option text.
+     * @returns {Promise<void>}
+     */
+    async fillTreatyFinancialLayer(
+        layerIndex: number,
+        policyLimit: string,
+        placingBasis: string,
+        periodBasis: string
+    ): Promise<void> {
+        await this.fillAndVerify(
+            this.treatyPolicyLimitInput(layerIndex),
+            policyLimit
+        );
+        await this.selectSearchableOption(
+            this.placingBasisTrigger(layerIndex),
+            placingBasis
+        );
+        await this.selectSearchableOption(
+            this.periodBasisTrigger(layerIndex),
+            periodBasis
         );
     }
 

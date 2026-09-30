@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test';
+import { Routes } from '../../enums/solas/routes';
 
 export class ProgramDetailPage {
     constructor(private readonly page: Page) {}
@@ -50,6 +51,16 @@ export class ProgramDetailPage {
             .getByRole('button', { name: 'Confirm' });
     }
 
+    get belongsToPoolValue(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- read-only summary value has no role/label/testid, only data-ref.
+        return this.page.locator('[data-ref="belongsToPool-value"]');
+    }
+
+    get poolValue(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- read-only summary value has no role/label/testid, only data-ref.
+        return this.page.locator('[data-ref="terrorPoolId-value"]');
+    }
+
     // ==================== Actions ====================
 
     /**
@@ -67,6 +78,21 @@ export class ProgramDetailPage {
         }
 
         return match[1];
+    }
+
+    /**
+     * Navigates to a fresh page load of the given program's Details tab,
+     * bypassing any in-memory wizard/finalize state -- required to verify a
+     * value actually persisted server-side rather than just rendering from
+     * client state (see NGUI-3388 verification in Solas_AddProgram_Workflow.md).
+     * @param {string} programId - The program's numeric ID.
+     * @returns {Promise<void>}
+     */
+    async reloadDetails(programId: string): Promise<void> {
+        await this.page.goto(
+            `${Routes.PROGRAM_EDIT}/${programId}/edit?tab=details`
+        );
+        await expect(this.belongsToPoolValue).toBeVisible();
     }
 
     /**

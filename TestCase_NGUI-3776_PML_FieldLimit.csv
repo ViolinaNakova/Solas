@@ -1,0 +1,68 @@
+﻿AC,Steps,Expected results
+"TC-NGUI-3776-001 - PML accepts the maximum value 999,999% (Specialty - Energy / Construction)","1. Open a Specialty - Energy (Construction) program on the Financial Layers tab in edit mode.
+2. In the layer's PML field enter 999999.
+3. Tab out of the field.
+4. Click Save.
+5. Reload the page and open the Financial Layers tab.","No validation error is shown on the PML field. ""Financial layers saved"" is displayed. After reload PML shows 999,999% (not truncated or rounded)."
+TC-NGUI-3776-002 - PML rejects a value just above the maximum,"1. Open a Specialty - Energy (Construction) program on the Financial Layers tab in edit mode.
+2. In the PML field enter 1000000 (and, if decimals are allowed, 999999.01).
+3. Tab out of the field.
+4. Try to click Save.","The PML field is marked invalid with a validation message stating the maximum (999,999%). The layer is not saved and the previously saved PML value is unchanged after reload."
+TC-NGUI-3776-003 - PML accepts a value just below the maximum,"1. Open a Specialty - Energy (Construction) program on the Financial Layers tab in edit mode.
+2. Enter 999998 in PML.
+3. Click Save.
+4. Reload the page.","No validation error is shown. Save succeeds and after reload PML shows 999,998%."
+TC-NGUI-3776-004 - Values above the previous limit are no longer rejected,"1. Open a Specialty - Energy (Construction) program on the Financial Layers tab in edit mode.
+2. Enter 1000 in PML and click Save.
+3. Reload the page and check PML.
+4. Enter 50000 in PML and click Save.
+5. Reload the page and check PML.","Both values save without a validation error and are displayed after reload as 1,000% and 50,000%."
+TC-NGUI-3776-005 - PML accepts zero (lower boundary),"1. Open a Specialty - Energy (Construction) program on the Financial Layers tab in edit mode.
+2. Enter 0 in PML.
+3. Click Save.
+4. Reload the page.",No validation error is shown. Save succeeds and after reload PML shows 0%.
+TC-NGUI-3776-006 - PML rejects a negative value,"1. Open a Specialty - Energy (Construction) program on the Financial Layers tab in edit mode.
+2. Enter -1 in PML.
+3. Tab out of the field.
+4. Try to click Save.",A validation message is shown or the minus sign is not accepted. The layer is not saved with a negative PML.
+TC-NGUI-3776-007 - PML rejects non-numeric input,"1. Open a Specialty - Energy (Construction) program on the Financial Layers tab in edit mode.
+2. Type abc in the PML field and tab out.
+3. Type 12a in the PML field and tab out.
+4. Type % in the PML field and tab out.",Non-numeric characters are blocked while typing or trigger a validation message. No non-numeric value can be saved.
+TC-NGUI-3776-008 - PML decimal precision,"1. Open a Specialty - Energy (Construction) program on the Financial Layers tab in edit mode.
+2. Enter 12345.67 in PML, click Save and reload.
+3. Enter 999998.99 in PML, click Save and reload.","Decimals are handled consistently with the field's configured precision (stored and shown as entered, or rounded by a documented rule). Decimals don't push a sub-maximum value over the limit or cause a validation error."
+TC-NGUI-3776-009 - PML can be cleared (empty value),"1. Open a Specialty - Energy (Construction) program on the Financial Layers tab in edit mode.
+2. Save the layer with PML = 5000.
+3. Clear the PML field.
+4. Click Save.
+5. Reload the page.",PML is optional: Save succeeds and PML is empty after reload. The previous 5000 value doesn't come back.
+"TC-NGUI-3776-010 - Specialty - Property: PML 999,999% is shown and saved","1. Open a Specialty - Property program on the Financial Layers tab in edit mode.
+2. Enter 999999 in the PML field.
+3. Click Save.
+4. Reload the page and open the Financial Layers tab.","No validation error is shown. Save succeeds and after reload PML = 999,999%."
+"TC-NGUI-3776-011 - Specialty - Space: PML 999,999% is shown and saved","1. Open a Specialty - Space program on the Financial Layers tab in edit mode.
+2. Enter 999999 in the PML field.
+3. Click Save.
+4. Reload the page and open the Financial Layers tab.","No validation error is shown. Save succeeds and after reload PML = 999,999%."
+"TC-NGUI-3776-012 - Specialty - Political Risk Re: PML 999,999% is shown and saved","1. Open a Specialty - Political Risk Re program on the Financial Layers tab in edit mode.
+2. Enter 999999 in the PML field.
+3. Click Save.
+4. Reload the page and open the Financial Layers tab.","No validation error is shown. Save succeeds and after reload PML = 999,999%."
+"TC-NGUI-3776-013 - LOB without a visibility rule (Specialty - Credit): PML 999,999% is shown and saved","1. Open a Specialty - Credit program on the Financial Layers tab in edit mode.
+2. Enter 999999 in the PML field.
+3. Click Save.
+4. Reload the page and open the Financial Layers tab.","No validation error is shown. Save succeeds and after reload PML = 999,999%."
+"TC-NGUI-3776-014 - Outwards line: PML 999,999% is shown and saved","1. Open an Outwards program (any Line of Business) on the Financial Layers tab in edit mode.
+2. Enter 999999 in the PML field.
+3. Click Save.
+4. Reload the page and open the Financial Layers tab.","No validation error is shown. Save succeeds and after reload PML = 999,999%."
+TC-NGUI-3776-015 - Reinsurance - Property: PML is shown but NOT saved (known limitation),"1. Open a Reinsurance - Property program (any Program Type except Direct RDF) on the Financial Layers tab in edit mode.
+2. Enter 5000 in PML and check that no validation error is shown.
+3. Click Save.
+4. Reload the page and open the Financial Layers tab.","The value is accepted in the UI (the new limit applies). After reload PML is empty, because Reinsurance has no save path for PML (as documented in the ticket comment; pending confirmation whether this is acceptable)."
+TC-NGUI-3776-016 - Existing program: PML value is updated to the new maximum,"1. Open an existing Specialty - Energy program with a saved layer where PML = 100.
+2. Go to the Financial Layers tab and click Edit.
+3. Change PML from 100 to 999999.
+4. Click Save.
+5. Reload the page.","Save succeeds with no validation error. After reload PML = 999,999% and no other layer fields have changed."

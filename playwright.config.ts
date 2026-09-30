@@ -79,7 +79,9 @@ export default defineConfig({
             name: 'setup',
             use: {
                 ...devices['Desktop Chrome'],
-                viewport: { width: 1920, height: 1080 },
+                viewport: null,
+                deviceScaleFactor: undefined,
+                launchOptions: { args: ['--start-maximized'] },
             },
             testMatch: /.*\.setup\.ts/,
         },
@@ -103,7 +105,9 @@ export default defineConfig({
             use: {
                 storageState: StorageStatePaths.SOLAS,
                 ...devices['Desktop Chrome'],
-                viewport: { width: 1920, height: 1080 },
+                viewport: null,
+                deviceScaleFactor: undefined,
+                launchOptions: { args: ['--start-maximized'] },
             },
         },
 

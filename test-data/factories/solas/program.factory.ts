@@ -61,3 +61,23 @@ export function generateSatelliteLaunchLayer(
         umr: `UMR-TEST-${faker.string.numeric(6)}`,
     };
 }
+
+export type PVWarTerrorReProgramData = {
+    terrorTiv: number;
+    biTiv: number;
+    policyLimit: number;
+};
+
+/**
+ * Generates sample data for a Specialty/Political Violence War & Terror Re
+ * program's Terror TIV/B.I. TIV (Initial Details) and Policy Limit (Financial
+ * Layer) fields, per Solas_AddProgram_Workflow.md's "Run 8" template.
+ * @returns {PVWarTerrorReProgramData} Sample data for the program.
+ */
+export function generatePVWarTerrorReProgramData(): PVWarTerrorReProgramData {
+    return {
+        terrorTiv: faker.number.int({ min: 5_000_000, max: 20_000_000 }),
+        biTiv: faker.number.int({ min: 500_000, max: 2_000_000 }),
+        policyLimit: faker.number.int({ min: 5_000_000, max: 20_000_000 }),
+    };
+}
