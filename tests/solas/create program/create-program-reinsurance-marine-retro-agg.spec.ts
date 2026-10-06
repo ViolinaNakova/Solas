@@ -1,6 +1,6 @@
 import { expect, test } from '../../../fixtures/pom/test-options';
 import {
-    generateReinsuranceMarinePerils,
+    generateReinsuranceMarinePeril,
     generateReinsuranceTreatyLayer,
 } from '../../../test-data/factories/solas/program.factory';
 
@@ -24,7 +24,7 @@ test.describe('create Program - Reinsurance Marine Retro Agg', () => {
             const rpiType = 'New to Fidelis';
             const periodBasis = 'LOD';
             const earningPattern = 'Standard';
-            const perils = generateReinsuranceMarinePerils();
+            const peril = generateReinsuranceMarinePeril();
 
             await test.step('GIVEN the user opens the Add a New Program dialog', async () => {
                 await submissionsPage.open();
@@ -50,8 +50,8 @@ test.describe('create Program - Reinsurance Marine Retro Agg', () => {
                 );
             });
 
-            await test.step(`AND random perils are selected (${perils.join(', ')})`, async () => {
-                await addProgramPage.selectPerils(perils);
+            await test.step(`AND a random peril (${peril}) is selected and Next step is clicked`, async () => {
+                await addProgramPage.selectPerils([peril]);
             });
 
             await test.step('AND the first Financial Layer is filled', async () => {

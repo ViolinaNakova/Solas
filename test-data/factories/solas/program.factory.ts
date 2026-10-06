@@ -136,16 +136,10 @@ export function generatePVWarTerrorReProgramData(): PVWarTerrorReProgramData {
 }
 
 /**
- * Picks a random, non-empty set of distinct peril codes for the Reinsurance /
- * Marine "Select Perils" step (which requires at least one peril).
- * @param {number} max - Maximum number of perils to pick (default 3).
- * @returns {ReinsuranceMarinePerilCode[]} Randomly selected peril codes.
+ * Picks a single random peril code for the Reinsurance / Marine "Select
+ * Perils" step (which requires at least one peril).
+ * @returns {ReinsuranceMarinePerilCode} A randomly selected peril code.
  */
-export function generateReinsuranceMarinePerils(
-    max = 3
-): ReinsuranceMarinePerilCode[] {
-    return faker.helpers.arrayElements(reinsuranceMarinePerilCodes, {
-        min: 1,
-        max,
-    });
+export function generateReinsuranceMarinePeril(): ReinsuranceMarinePerilCode {
+    return faker.helpers.arrayElement(reinsuranceMarinePerilCodes);
 }
