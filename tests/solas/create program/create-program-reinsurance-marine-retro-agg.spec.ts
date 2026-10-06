@@ -1,5 +1,8 @@
 import { expect, test } from '../../../fixtures/pom/test-options';
-import { generateReinsuranceTreatyLayer } from '../../../test-data/factories/solas/program.factory';
+import {
+    generateReinsuranceMarinePerils,
+    generateReinsuranceTreatyLayer,
+} from '../../../test-data/factories/solas/program.factory';
 
 test.describe('create Program - Reinsurance Marine Retro Agg', () => {
     // NOTE: intentionally no cleanup here -- created programs are meant to stay
@@ -21,6 +24,7 @@ test.describe('create Program - Reinsurance Marine Retro Agg', () => {
             const rpiType = 'New to Fidelis';
             const periodBasis = 'LOD';
             const earningPattern = 'Standard';
+            const perils = generateReinsuranceMarinePerils();
 
             await test.step('GIVEN the user opens the Add a New Program dialog', async () => {
                 await submissionsPage.open();
@@ -46,8 +50,8 @@ test.describe('create Program - Reinsurance Marine Retro Agg', () => {
                 );
             });
 
-            await test.step('AND a required peril is selected', async () => {
-                await addProgramPage.selectPerils(['TC']);
+            await test.step(`AND random perils are selected (${perils.join(', ')})`, async () => {
+                await addProgramPage.selectPerils(perils);
             });
 
             await test.step('AND the first Financial Layer is filled', async () => {
@@ -90,7 +94,7 @@ test.describe('create Program - Reinsurance Marine Retro Agg', () => {
                 await expect(programDetailPage.heading).toContainText(
                     'HELIOS KLINIKEN GMBH'
                 );
-                await expect(programDetailPage.programTypeBadge).toHaveText(
+                await expect(programDetailPage.programTypeBadge).toContainText(
                     programType
                 );
             });

@@ -1,4 +1,8 @@
 import { faker } from '@faker-js/faker';
+import {
+    ReinsuranceMarinePerilCode,
+    reinsuranceMarinePerilCodes,
+} from '../../static/solas/perils';
 
 export type SatelliteLaunchLayerData = {
     description: string;
@@ -129,4 +133,19 @@ export function generatePVWarTerrorReProgramData(): PVWarTerrorReProgramData {
         biTiv: faker.number.int({ min: 500_000, max: 2_000_000 }),
         policyLimit: faker.number.int({ min: 5_000_000, max: 20_000_000 }),
     };
+}
+
+/**
+ * Picks a random, non-empty set of distinct peril codes for the Reinsurance /
+ * Marine "Select Perils" step (which requires at least one peril).
+ * @param {number} max - Maximum number of perils to pick (default 3).
+ * @returns {ReinsuranceMarinePerilCode[]} Randomly selected peril codes.
+ */
+export function generateReinsuranceMarinePerils(
+    max = 3
+): ReinsuranceMarinePerilCode[] {
+    return faker.helpers.arrayElements(reinsuranceMarinePerilCodes, {
+        min: 1,
+        max,
+    });
 }
