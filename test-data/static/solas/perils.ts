@@ -1,5 +1,6 @@
 // Peril codes shown on the "Select Perils" step of the Reinsurance / Marine /
-// Retro Agg template (captured live from QA via playwright-cli).
+// Retro Agg template (captured live from QA via playwright-cli). The
+// Reinsurance / Personal Accident / Excess of Loss template shows the same set.
 export const reinsuranceMarinePerilCodes = [
     'TC',
     'EQ',

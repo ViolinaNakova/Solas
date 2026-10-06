@@ -50,8 +50,8 @@ test.describe('create Program - Reinsurance Marine Retro Agg', () => {
                 );
             });
 
-            await test.step(`AND a random peril (${peril}) is selected and Next step is clicked`, async () => {
-                await addProgramPage.selectPerils([peril]);
+            await test.step(`AND the default peril is kept, or a random one (${peril}) is selected, and Next step is clicked`, async () => {
+                await addProgramPage.selectPerilIfNoneSelected(peril);
             });
 
             await test.step('AND the first Financial Layer is filled', async () => {

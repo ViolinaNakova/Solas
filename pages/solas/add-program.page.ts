@@ -117,6 +117,10 @@ export class AddProgramPage {
         return this.page.getByRole('heading', { name: 'Perils' });
     }
 
+    get perilsRequiredMessage(): Locator {
+        return this.page.getByText('One or more perils must be selected');
+    }
+
     perilButton(perilCode: string): Locator {
         // Button names are "<code> <description>" (e.g. "EQ Earthquake"); older
         // builds rendered the code alone, so match the code as the first word.
@@ -211,6 +215,25 @@ export class AddProgramPage {
     treatyColumnInput(fieldName: string, columnIndex: number): Locator {
         return this.nthLayerField(
             `input[data-testid$=".${fieldName}-input"]`,
+            columnIndex
+        );
+    }
+
+    // Limit/Excess field names vary by template: aggregate-based (e.g. Marine /
+    // Retro Agg: aggregateLimit/aggregateExcess) vs per-occurrence (e.g.
+    // Personal Accident / Excess of Loss: PrimaryLimit/PrimaryXs). A template
+    // renders only one pair, so either name is matched.
+
+    treatyLimitInput(columnIndex: number): Locator {
+        return this.nthLayerField(
+            'input[data-testid$=".aggregateLimit-input"], input[data-testid$=".PrimaryLimit-input"]',
+            columnIndex
+        );
+    }
+
+    treatyExcessInput(columnIndex: number): Locator {
+        return this.nthLayerField(
+            'input[data-testid$=".aggregateExcess-input"], input[data-testid$=".PrimaryXs-input"]',
             columnIndex
         );
     }
@@ -721,6 +744,26 @@ export class AddProgramPage {
     }
 
     /**
+     * On the Select Perils step, keeps any peril the template pre-selects and
+     * goes straight to "Next step"; only when none is selected (the "One or
+     * more perils must be selected" message is shown) is the given peril
+     * clicked first.
+     * @param {string} perilCode - Peril code to select when none is pre-selected (e.g. "TC").
+     * @returns {Promise<void>}
+     */
+    async selectPerilIfNoneSelected(perilCode: string): Promise<void> {
+        await expect(this.perilsHeading).toBeVisible();
+
+        if (await this.perilsRequiredMessage.isVisible()) {
+            await this.perilButton(perilCode).click();
+            await expect(this.perilsRequiredMessage).toBeHidden();
+        }
+
+        await expect(this.nextStepButton).toBeEnabled();
+        await this.advancePastStep(this.perilsHeading);
+    }
+
+    /**
      * Skips the optional Select Perils step.
      * @returns {Promise<void>}
      */
@@ -906,7 +949,7 @@ export class AddProgramPage {
 
     /**
      * Fills only the plain numeric fields of a Reinsurance treaty layer (Policy
-     * Limit, Excess, Minimum Signing, Written/Signed Line, Bound Premium).
+     * Limit, Excess -- aggregate or per-occurrence, per template -- Minimum Signing, Written/Signed Line, Bound Premium).
      * Exposed separately so an earlier layer can be re-filled after adding a
      * later one, which can silently scramble them (see
      * Solas_AddProgram_Workflow.md's layer-swap gotcha).
@@ -919,11 +962,11 @@ export class AddProgramPage {
         data: ReinsuranceTreatyLayerData
     ): Promise<void> {
         await this.fillAndVerify(
-            this.treatyColumnInput('aggregateLimit', columnIndex),
+            this.treatyLimitInput(columnIndex),
             String(data.policyLimit)
         );
         await this.fillAndVerify(
-            this.treatyColumnInput('aggregateExcess', columnIndex),
+            this.treatyExcessInput(columnIndex),
             String(data.excess)
         );
         await this.fillAndVerify(
@@ -945,7 +988,8 @@ export class AddProgramPage {
     }
 
     /**
-     * Fills a Reinsurance treaty financial layer (e.g. Marine / Retro Agg) with
+     * Fills a Reinsurance treaty financial layer (e.g. Marine / Retro Agg,
+     * Personal Accident / Excess of Loss) with
      * the stable non-modal fields: Description, the plain numeric fields, UMR,
      * RPI Type, Period Basis and Earning Pattern. Placing Basis is pre-filled by
      * the template and left as-is. Earning Pattern is set last, since setting
