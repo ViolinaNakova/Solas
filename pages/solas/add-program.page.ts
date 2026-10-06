@@ -118,7 +118,11 @@ export class AddProgramPage {
     }
 
     perilButton(perilCode: string): Locator {
-        return this.page.getByRole('button', { name: perilCode, exact: true });
+        // Button names are "<code> <description>" (e.g. "EQ Earthquake"); older
+        // builds rendered the code alone, so match the code as the first word.
+        return this.page.getByRole('button', {
+            name: new RegExp(`^${perilCode}(\\s|$)`),
+        });
     }
 
     // ==================== Locators: Financial Layers ====================
