@@ -3,6 +3,7 @@ import {
     ReinsuranceTreatyLayerData,
     SatelliteLaunchLayerData,
 } from '../../test-data/factories/solas/program.factory';
+import { formatShortDate } from '../../helpers/util/util';
 
 export class AddProgramPage {
     constructor(private readonly page: Page) {}
@@ -56,6 +57,22 @@ export class AddProgramPage {
 
     get underwriterInput(): Locator {
         return this.page.getByTestId('underwriter-input');
+    }
+
+    get inceptionInput(): Locator {
+        return this.page.getByTestId('inception-input');
+    }
+
+    get expiryInput(): Locator {
+        return this.page.getByTestId('expiry-input');
+    }
+
+    get inceptionValidationMessage(): Locator {
+        return this.page.getByText('Please select inception date');
+    }
+
+    get expiryValidationMessage(): Locator {
+        return this.page.getByText('Please select expiry date');
     }
 
     get nextStepButton(): Locator {
@@ -508,7 +525,7 @@ export class AddProgramPage {
 
     /**
      * Fills the required Initial Details fields (Client, Broker, Law & Jurisdiction,
-     * Placing Office, Underwriter) and advances to the next step.
+     * Placing Office, Underwriter, Inception = today) and advances to the next step.
      * @param {string} client - Text to search the Client combobox by (partial match).
      * @param {string} broker - Text to search the Broker combobox by (partial match).
      * @param {string} lawJurisdiction - Text to filter the Law & Jurisdiction option by.
@@ -539,8 +556,21 @@ export class AddProgramPage {
             underwriter,
             false
         );
+        await this.setInceptionDate();
 
         await this.advancePastStep(this.clientInput);
+    }
+
+    /**
+     * Sets the Inception date (DD-MMM-YYYY). The app no longer pre-fills
+     * Inception/Expiry, but it auto-derives Expiry (Inception + 1 year - 1 day)
+     * once Inception is set, so only Inception is filled here.
+     * @param {Date} date - Inception date (defaults to today).
+     * @returns {Promise<void>}
+     */
+    async setInceptionDate(date: Date = new Date()): Promise<void> {
+        await this.fillAndVerify(this.inceptionInput, formatShortDate(date));
+        await expect(this.expiryInput).not.toHaveValue('');
     }
 
     /**
@@ -623,6 +653,7 @@ export class AddProgramPage {
             underwriter,
             false
         );
+        await this.setInceptionDate();
 
         await this.advancePastStep(this.clientInput);
     }
@@ -662,6 +693,7 @@ export class AddProgramPage {
             underwriter,
             false
         );
+        await this.setInceptionDate();
 
         await this.advancePastStep(this.clientInput);
     }
@@ -968,9 +1000,15 @@ export class AddProgramPage {
                 return;
             }
 
-            await this.nextStepButton.click();
+            // While a prior click's save is in flight, "Next step" stays disabled
+            // and then relabels to "Finalize" (detaching), so a retry click can
+            // time out even though the wizard advanced -- fall through to the
+            // Finalize check instead of failing.
+            await this.nextStepButton
+                .click({ timeout: 5000 })
+                .catch(() => undefined);
             await this.finalizeButton
-                .waitFor({ state: 'visible', timeout: 5000 })
+                .waitFor({ state: 'visible', timeout: 10000 })
                 .catch(() => undefined);
         }
 
