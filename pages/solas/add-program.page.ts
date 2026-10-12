@@ -4,6 +4,7 @@ import {
     SatelliteLaunchLayerData,
 } from '../../test-data/factories/solas/program.factory';
 import { formatShortDate } from '../../helpers/util/util';
+import { Timeouts } from '../../enums/util/timeouts';
 
 export class AddProgramPage {
     constructor(private readonly page: Page) {}
@@ -130,16 +131,28 @@ export class AddProgramPage {
     }
 
     // ==================== Locators: Financial Layers ====================
-    // Plain numeric fields are keyed by array index (layers.N.*), which stays
-    // stable across layers. Dropdown/free-text fields are keyed by the layer's
-    // backend-assigned ID instead, which is dynamic and can change mid-flow (see
-    // Solas_AddProgram_Workflow.md); since DOM order matches layer index (verified
-    // live), positional (.nth) matching on the ID-agnostic attribute prefix is
-    // used for those instead of threading a captured ID through every call.
+    // Fields are located by on-screen column position (DOM order), not by the
+    // `layers.N.*` array index or the backend layer ID: a newly added unsaved
+    // layer takes index 0 and shifts saved layers' indices up (verified live on
+    // program 411639), and its ID is a temporary -1 until saved. Positional
+    // (.nth) matching on the ID-agnostic attribute suffix/prefix is stable.
 
     get addLayerButton(): Locator {
         // eslint-disable-next-line playwright/no-raw-locators -- no role/label/placeholder/testid exists; data-ref is the only stable attribute.
         return this.page.locator('[data-ref="add-layer-button"]');
+    }
+
+    get saveLayersButton(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- icon-only button with no accessible name or testid; data-ref is the only stable attribute.
+        return this.page.locator('[data-ref="summary-save-financialLayers"]');
+    }
+
+    get layersSavedMessage(): Locator {
+        return this.page.getByText('Financial layers saved');
+    }
+
+    get unsavedChangesDialog(): Locator {
+        return this.page.getByRole('alertdialog', { name: 'Unsaved Changes' });
     }
 
     get currencyFields(): Locator {
@@ -150,49 +163,39 @@ export class AddProgramPage {
     }
 
     policyLimitInput(layerIndex: number): Locator {
-        return this.page.getByTestId(`layers.${layerIndex}.PrimaryLimit-input`);
+        return this.treatyColumnInput('PrimaryLimit', layerIndex);
     }
 
     excessInput(layerIndex: number): Locator {
-        return this.page.getByTestId(`layers.${layerIndex}.PrimaryXs-input`);
+        return this.treatyColumnInput('PrimaryXs', layerIndex);
     }
 
     minimumSigningInput(layerIndex: number): Locator {
-        return this.page.getByTestId(
-            `layers.${layerIndex}.MinimumSigningLine-input`
-        );
+        return this.treatyColumnInput('MinimumSigningLine', layerIndex);
     }
 
     writtenLineInput(layerIndex: number): Locator {
-        return this.page.getByTestId(`layers.${layerIndex}.WrittenLine-input`);
+        return this.treatyColumnInput('WrittenLine', layerIndex);
     }
 
     signedLineInput(layerIndex: number): Locator {
-        return this.page.getByTestId(`layers.${layerIndex}.SignedLine-input`);
+        return this.treatyColumnInput('SignedLine', layerIndex);
     }
 
     boundPremiumInput(layerIndex: number): Locator {
-        return this.page.getByTestId(
-            `layers.${layerIndex}.PremiumOverride-input`
-        );
+        return this.treatyColumnInput('PremiumOverride', layerIndex);
     }
 
     estGrossPremium100Input(layerIndex: number): Locator {
-        return this.page.getByTestId(
-            `layers.${layerIndex}.estimatedGrossPremium100-input`
-        );
+        return this.treatyColumnInput('estimatedGrossPremium100', layerIndex);
     }
 
     estGrossPremiumShareInput(layerIndex: number): Locator {
-        return this.page.getByTestId(
-            `layers.${layerIndex}.estimatedGrossPremiumShare-input`
-        );
+        return this.treatyColumnInput('estimatedGrossPremiumShare', layerIndex);
     }
 
     launchAttemptsInput(layerIndex: number): Locator {
-        return this.page.getByTestId(
-            `layers.${layerIndex}.launchAttempts-input`
-        );
+        return this.treatyColumnInput('launchAttempts', layerIndex);
     }
 
     // ==================== Locators: Financial Layers (Treaty template) ====================
@@ -496,7 +499,25 @@ export class AddProgramPage {
         const attempts = 3;
 
         for (let attempt = 1; attempt <= attempts; attempt++) {
-            await field.fill(value);
+            // Some layer text fields (e.g. Description) render readonly until
+            // clicked (click-to-edit), so focus the field before filling. A
+            // grid re-render (e.g. right after a dropdown selection in the same
+            // layer) can drop the edit state, leaving the field readonly; click
+            // again on the next attempt instead of hanging in fill().
+            await field.click();
+            // fill() auto-waits for the field to become editable.
+            const filled = await field
+                .fill(value, { timeout: Timeouts.FIELD_EDITABLE })
+                .then(() => true)
+                .catch(() => false);
+            if (!filled) {
+                if (attempt === attempts) {
+                    throw new Error(
+                        `Field stayed readonly after ${attempts} click attempts; could not fill "${value}".`
+                    );
+                }
+                continue;
+            }
             await field.press('Tab');
 
             // Percentage fields re-render with padded decimals (e.g. "15" ->
@@ -776,13 +797,55 @@ export class AddProgramPage {
     }
 
     /**
-     * Clicks the "+" button to add a new financial layer and waits for it to render.
+     * Waits for the Financial Layers grid to render at least one layer, which
+     * can be slow after entering the step or after a save.
      * @returns {Promise<void>}
      */
-    async addFinancialLayer(): Promise<void> {
+    async waitForLayerGrid(): Promise<void> {
+        // eslint-disable-next-line playwright/no-nth-methods -- any rendered layer proves the grid has loaded.
+        await expect(this.currencyFields.first()).toBeVisible({
+            timeout: Timeouts.LAYER_GRID_LOAD,
+        });
+    }
+
+    /**
+     * Saves any pending layer changes, then clicks the "+" button to add a new
+     * financial layer and waits for it to render. Saving first avoids the
+     * "Unsaved Changes" dialog, which renumbers unsaved layers on confirm.
+     * @param {number} expectedCount - Optional layer count expected after the add; when given, the grid is first awaited at one fewer, since it briefly re-renders with fewer columns after a save.
+     * @returns {Promise<void>}
+     */
+    async addFinancialLayer(expectedCount?: number): Promise<void> {
+        await this.waitForLayerGrid();
+        if (await this.saveLayersButton.isEnabled()) {
+            await this.saveLayerChanges();
+        }
+        if (expectedCount !== undefined) {
+            await expect(this.currencyFields).toHaveCount(expectedCount - 1, {
+                timeout: Timeouts.LAYER_GRID_LOAD,
+            });
+        }
         const countBefore = await this.currencyFields.count();
         await this.addLayerButton.click();
-        await expect(this.currencyFields).toHaveCount(countBefore + 1);
+        await expect(this.currencyFields).toHaveCount(
+            expectedCount ?? countBefore + 1
+        );
+    }
+
+    /**
+     * Saves the Financial Layers grid in place (the grid's own "Save" button,
+     * without leaving the step). Adding a layer while another is unsaved
+     * prompts an "Unsaved Changes" dialog and renumbers the unsaved layers, so
+     * multi-layer flows save each filled layer before adding the next one.
+     * @returns {Promise<void>}
+     */
+    async saveLayerChanges(): Promise<void> {
+        await expect(this.saveLayersButton).toBeEnabled();
+        await this.saveLayersButton.click();
+        // eslint-disable-next-line playwright/no-nth-methods -- earlier saves' toasts can still be stacked; any one confirms this save.
+        await expect(this.layersSavedMessage.first()).toBeVisible();
+        await expect(this.saveLayersButton).toBeDisabled();
+        await expect(this.unsavedChangesDialog).toBeHidden();
     }
 
     /**
@@ -857,6 +920,7 @@ export class AddProgramPage {
         lloydsLeader: string,
         earningPattern: string
     ): Promise<void> {
+        await this.waitForLayerGrid();
         await this.fillAndVerify(
             this.descriptionInput(layerIndex),
             data.description

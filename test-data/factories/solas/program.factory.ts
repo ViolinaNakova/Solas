@@ -66,6 +66,39 @@ export function generateSatelliteLaunchLayer(
     };
 }
 
+export type ProgramLifecycleData = {
+    submissionFileName: string;
+    quoteFileName: string;
+    signingFileName: string;
+    quotedRpi: number;
+    quotedUlr: number;
+    gelrNonCat: number;
+    gelrCat: number;
+    leaderName: string;
+};
+
+/**
+ * Generates the values a program needs while moving through its lifecycle
+ * (status-gate layer fields and uploaded file names). File names are unique
+ * per run, since a drop spot rejects a duplicate name ("File name already
+ * exists").
+ * @returns {ProgramLifecycleData} Lifecycle values for one program.
+ */
+export function generateProgramLifecycleData(): ProgramLifecycleData {
+    const suffix = faker.string.alphanumeric(8);
+
+    return {
+        submissionFileName: `submission-${suffix}.pdf`,
+        quoteFileName: `quote-${suffix}.pdf`,
+        signingFileName: `signing-${suffix}.pdf`,
+        quotedRpi: faker.number.int({ min: 90, max: 110 }),
+        quotedUlr: faker.number.int({ min: 20, max: 80 }),
+        gelrNonCat: faker.number.int({ min: 10, max: 40 }),
+        gelrCat: faker.number.int({ min: 1, max: 20 }),
+        leaderName: faker.company.name(),
+    };
+}
+
 export type ReinsuranceTreatyLayerData = {
     description: string;
     policyLimit: number;

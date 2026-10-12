@@ -2,6 +2,11 @@ import { test as base } from '@playwright/test';
 import { SubmissionsPage } from '../../pages/solas/submissions.page';
 import { AddProgramPage } from '../../pages/solas/add-program.page';
 import { ProgramDetailPage } from '../../pages/solas/program-detail.page';
+import { ProgramTasksPage } from '../../pages/solas/program-tasks.page';
+import { ProgramFilesPage } from '../../pages/solas/program-files.page';
+import { ProgramLayersPage } from '../../pages/solas/program-layers.page';
+import { ProgramChecksPage } from '../../pages/solas/program-checks.page';
+import { RiskCardPage } from '../../pages/solas/risk-card.page';
 
 /**
  * Framework fixtures for page objects.
@@ -21,6 +26,11 @@ export type FrameworkFixtures = {
     submissionsPage: SubmissionsPage;
     addProgramPage: AddProgramPage;
     programDetailPage: ProgramDetailPage;
+    programTasksPage: ProgramTasksPage;
+    programFilesPage: ProgramFilesPage;
+    programLayersPage: ProgramLayersPage;
+    programChecksPage: ProgramChecksPage;
+    riskCardPage: RiskCardPage;
     resetStorageState: () => Promise<void>;
 };
 
@@ -54,6 +64,26 @@ export const test = base.extend<FrameworkFixtures>({
 
     programDetailPage: async ({ page }, use) => {
         await use(new ProgramDetailPage(page));
+    },
+
+    programTasksPage: async ({ page }, use) => {
+        await use(new ProgramTasksPage(page));
+    },
+
+    programFilesPage: async ({ page }, use) => {
+        await use(new ProgramFilesPage(page));
+    },
+
+    programLayersPage: async ({ page }, use) => {
+        await use(new ProgramLayersPage(page));
+    },
+
+    programChecksPage: async ({ page }, use) => {
+        await use(new ProgramChecksPage(page));
+    },
+
+    riskCardPage: async ({ page }, use) => {
+        await use(new RiskCardPage(page));
     },
 
     resetStorageState: async ({ context }, use) => {
