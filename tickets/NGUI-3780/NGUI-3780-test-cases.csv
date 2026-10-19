@@ -1,0 +1,186 @@
+﻿ID,Section,Acceptance Criteria,Title,Type,Priority,Preconditions,Steps,Expected Result,References
+TC-NGUI-3780-001,Program Layer Selection,"General, Scenario 1",Fin Layer dropdown is displayed for each in-scope LOB,Happy Path,High,"Three Specialty programs exist with LOB Political Risk, Political Risk Re and Asset Backed Finance & Portfolio Credit, each with a financial layer. Valid amortisation file available.","1. Open the Political Risk program and open the add file popup.
+2. In the add file popup, attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+3. Repeat steps 1-2 for the Political Risk Re program.
+4. Repeat steps 1-2 for the Asset Backed Finance & Portfolio Credit program.",The Fin Layer dropdown is displayed in the add file popup for all three programs.,NGUI-3780
+TC-NGUI-3780-002,Program Layer Selection,General,Fin Layer dropdown is not displayed for an out-of-scope LOB,Negative,Medium,"Program with a LOB outside scope (e.g. Space) exists, with a financial layer. Valid amortisation file available.","1. Open the program and open the add file popup.
+2. In the add file popup, attach the file and select ""PML Amortisation Schedule"" as the drop spot.","The Fin Layer dropdown is not displayed. After the upload, no amortisation import starts and the Amortisation File Entries popup is not displayed.",NGUI-3780
+TC-NGUI-3780-003,Program Layer Selection,Scenario 1,Fin Layer dropdown lists the program layers,Happy Path,High,"Program with COB = Specialty and LOB = Political Risk exists, with two financial layers that have Signed Line, Gross Pricing and Policy Limit populated. Valid amortisation file available.","1. Open the program and open the add file popup.
+2. In the add file popup, attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+3. Click the Fin Layer dropdown.","The dropdown lists both layer IDs of the program, each with its carrier numeric code. No layers from other programs are listed.",NGUI-3780
+TC-NGUI-3780-004,Program Layer Selection,Scenario 1,Only one layer can be selected,Validation,Medium,"Program with COB = Specialty and LOB = Political Risk exists, with two financial layers that have Signed Line, Gross Pricing and Policy Limit populated. Valid amortisation file available.","1. Open the program and open the add file popup.
+2. In the add file popup, attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+3. Select the first layer in the Fin Layer dropdown.
+4. Select the second layer in the Fin Layer dropdown.",Only the second layer is selected; the first selection is replaced.,NGUI-3780
+TC-NGUI-3780-005,Program Layer Selection,Scenario 2,Apply button is enabled only after a layer is selected,Validation,High,"Program with COB = Specialty and LOB = Political Risk exists, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. Valid amortisation file available.","1. Open the program and open the add file popup.
+2. In the add file popup, attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+3. Check the Apply button without selecting a layer.
+4. Select the layer in the Fin Layer dropdown.",Apply is disabled while no Fin Layer is selected and becomes enabled after a layer is selected.,NGUI-3780
+TC-NGUI-3780-006,Program Layer Selection,Scenario 3,Apply links the layer and starts the import,Happy Path,High,"Program with COB = Specialty and LOB = Political Risk exists, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. Valid amortisation file available.","1. Open the program and open the add file popup.
+2. In the add file popup, attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+3. Select the layer in the Fin Layer dropdown and click Apply.","The add file popup closes, the file is imported and validated, and the Amortisation File Entries popup is displayed with the Layer Line, Layer Gross Pricing and Layer Limit of the selected layer.",NGUI-3780
+TC-NGUI-3780-007,Program Layer Selection,Scenario 1,Fin Layer dropdown is displayed only for the PML Amortisation Schedule drop spot,Validation,Medium,"Program with COB = Specialty and LOB = Political Risk exists, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. Valid amortisation file available.","1. Open the program and open the add file popup.
+2. Attach the file and select a drop spot other than ""PML Amortisation Schedule"".
+3. Change the drop spot to ""PML Amortisation Schedule"".
+4. Change the drop spot back to the other drop spot.","The Fin Layer dropdown is not displayed for the other drop spot, is displayed after ""PML Amortisation Schedule"" is selected, and is hidden again when the other drop spot is selected.",NGUI-3780
+TC-NGUI-3780-008,Excel File Structure Validation,Scenario 7,Rows after the first fully blank row are ignored,Validation,High,"Program with COB = Specialty and LOB = Political Risk exists, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. Excel file prepared from the valid template where rows 7 to 10 contain data, row 11 is blank and rows 12 to 14 contain data.","1. Open the program and open the add file popup, then attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+2. Select the layer in the Fin Layer dropdown and click Apply.",The review popup table shows only rows 7 to 10. Rows 12 to 14 are ignored and no error is reported for them.,NGUI-3780
+TC-NGUI-3780-009,Excel File Structure Validation,Scenario 7,File with no data rows is rejected,Negative,Medium,"Program with COB = Specialty and LOB = Political Risk exists, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. Excel file prepared from the valid template where row 7 and all rows below are blank.","1. Open the program and open the add file popup, then attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+2. Select the layer in the Fin Layer dropdown and click Apply.",The file is not imported and an error is displayed. The Amortisation File Entries popup is not displayed.,NGUI-3780
+TC-NGUI-3780-010,Excel File Structure Validation,Q6 answer,Only the first sheet of the workbook is read,Validation,Medium,"Program with COB = Specialty and LOB = Political Risk exists, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. Workbook whose first sheet holds a valid schedule and whose second sheet holds different data.","1. Open the program and open the add file popup, then attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+2. Select the layer in the Fin Layer dropdown and click Apply.",The review popup shows the data from the first sheet only.,NGUI-3780
+TC-NGUI-3780-011,File Import Error Handling,"Scenario 10, Scenario 11",Import error popup content and counts,Validation,High,"Program with COB = Specialty and LOB = Political Risk exists, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. Excel file prepared from the valid template where E1 and H5 are empty, F7 is empty and B8 contains ""abc"".","1. Open the program and open the add file popup, then attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+2. Select the layer in the Fin Layer dropdown and click Apply.","The popup shows the title Error importing file, the texts The uploaded file does not follow the defined structure or contains invalid data, Please fix the following errors and try uploading again, Total Errors: 4, and a Close button. Sections are shown as Missing Headers & Labels (2), Missing Values (1) and Invalid Values (1).",NGUI-3780
+TC-NGUI-3780-012,File Import Error Handling,Scenario 11,Only sections with errors are displayed,Validation,Medium,"Program with COB = Specialty and LOB = Political Risk exists, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. Excel file prepared from the valid template where only cell G10 is empty.","1. Open the program and open the add file popup, then attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+2. Select the layer in the Fin Layer dropdown and click Apply.",Only the Missing Values (1) section is displayed. Missing Headers & Labels and Invalid Values are not displayed.,NGUI-3780
+TC-NGUI-3780-013,File Import Error Handling,Scenario 16,Close on import error popup imports nothing,Negative,High,"Program with COB = Specialty and LOB = Political Risk exists, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. Excel file prepared from the valid template where cell F1 is empty.","1. Open the program and open the add file popup, then attach the file and select ""PML Amortisation Schedule"" as the drop spot.
+2. Select the layer in the Fin Layer dropdown and click Apply.
+3. Click Close.
+4. Open the Financial Layers tab and check the layer.",The popup closes. No data is imported or saved and the layer has no amortisation schedule.,NGUI-3780
+TC-NGUI-3780-014,Data Import and Review,Scenario 17,Valid file opens the review popup without saving,Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And a valid Excel file prepared from the template.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Without saving, open the program in another browser tab and check the layer in the Financial Layers tab.",The Amortisation File Entries popup is displayed. The layer has no saved amortisation schedule yet.,NGUI-3780
+TC-NGUI-3780-015,Data Import and Review,Scenario 18,Review popup header fields,Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where F3 is 10% and today's date falls between From and To of the row with Gross Exposure 1000000.40.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Check the header fields of the Amortisation File Entries popup.","Layer Line equals the layer Signed Line, Layer Gross Pricing equals the layer Gross Pricing, Layer Limit equals the layer Policy Limit, Fidelis Line equals F3, Premium equals F2 and Amort. Exposure shows 100000.",NGUI-3780
+TC-NGUI-3780-016,Data Import and Review,"Scenario 18, Scenario 20",Imported values can be edited,Happy Path,Medium,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And a valid Excel file prepared from the template.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Change From and To in row 1 using the date picker.
+5. Enter 31 in Days.
+6. Enter integers in Gross Exposure, Repayments, Policy Limit, Total Premium and Fidelis Premium.
+7. Enter 3.5% in Premium and 12% in Fidelis Line.",From and To open a date picker and show the picked dates. All other fields accept and show the entered values.,NGUI-3780
+TC-NGUI-3780-017,Data Import and Review,Scenario 19,Schedule table shows imported rows with rounded values,Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where row 7 has Gross Exposure 1234.5 and row 8 has Gross Exposure 1234.4.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Compare the table with columns B to I of the file.","The table has columns From, To, Days, Gross Exposure, Repayments, Policy Limit, Total Premium and Fidelis Premium with one row per data row. Decimals are shown as whole numbers: row 1 Gross Exposure 1235, row 2 Gross Exposure 1234.",NGUI-3780
+TC-NGUI-3780-018,Data Import and Review,Scenario 20,Days does not accept a non-integer value,Negative,Low,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And a valid Excel file prepared from the template.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Click a Days cell and enter 30.5.
+5. Click the same Days cell and enter abc.",Neither value is accepted and the Days cell keeps a valid integer.,NGUI-3780
+TC-NGUI-3780-019,Data Import and Review,Scenario 21,Summary fields are populated from the file,Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And a valid Excel file prepared from the template.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Check the summary fields under the table.","Total Repayments equals F1, Total Premium equals the sum of column H, Fidelis Share equals the sum of column I and Fidelis Line equals F3.",NGUI-3780
+TC-NGUI-3780-020,Imported Data - Business Rules Validation,Scenario 22,Premium different from layer Gross Pricing is flagged,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where F2 differs from the layer Gross Pricing.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Hover over Premium.",Premium is highlighted in red and the tooltip shows Premium must match the Gross Pricing value of the selected layer.,NGUI-3780
+TC-NGUI-3780-021,Imported Data - Business Rules Validation,"Scenario 22, Scenario 23, Scenario 30",No errors: Save enabled without toggle,Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where F2 equals the layer Gross Pricing, F3 equals the layer Signed Line, G7 equals the layer Policy Limit and all From, To and Days values are correct.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Check the fields, the Expected Errors toggle and the Save button.","No field is highlighted, the Expected Errors toggle is not displayed and Save is enabled.",NGUI-3780
+TC-NGUI-3780-022,Imported Data - Business Rules Validation,Scenario 23,Fidelis Line different from layer Signed Line is flagged,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where F3 differs from the layer Signed Line.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Hover over Fidelis Line.",Fidelis Line is highlighted in red and the tooltip shows Fidelis Line must match the Signed Line value of the selected layer.,NGUI-3780
+TC-NGUI-3780-023,Imported Data - Business Rules Validation,Scenario 24,Only the first-row Policy Limit is compared with the layer,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where G7 and G8 both differ from the layer Policy Limit.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Hover over Policy Limit in row 1.
+5. Check Policy Limit in row 2.",Row 1 Policy Limit is highlighted in red with the tooltip Policy Limit must match the selected layer Policy Limit. Row 2 is not highlighted.,NGUI-3780
+TC-NGUI-3780-024,Imported Data - Business Rules Validation,"Scenario 25, Scenario 28",From later than To is flagged in any row,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where row 7 has From 31/01/2027 and To 01/01/2027, row 8 has From and To 01/02/2027 with Days 1, and the last row has From later than To.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Hover over From in row 1.
+5. Check From in row 2 and in the last row.
+6. Check the Expected Errors toggle and the Save button.",From in row 1 and in the last row is highlighted in red with the tooltip From date must be less than or equal to To date. Row 2 is not highlighted. The toggle is not visible and Save is disabled.,NGUI-3780
+TC-NGUI-3780-025,Imported Data - Business Rules Validation,"Scenario 26, Scenario 28",Days not matching the inclusive date range is flagged in any row,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where row 7 is 01/01/2027 to 31/01/2027 with Days 30, row 8 is 01/02/2027 to 28/02/2027 with Days 28, and the last row has wrong Days.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Hover over Days in row 1.
+5. Check Days in row 2 and in the last row.
+6. Check the Expected Errors toggle and the Save button.",Days in row 1 and in the last row is highlighted in red with the tooltip Days value must equal the number of days between From and To dates (inclusive). Row 2 is not highlighted. The toggle is not visible and Save is disabled.,NGUI-3780
+TC-NGUI-3780-026,Imported Data - Business Rules Validation,Scenario 27,Correcting a value removes the error highlight,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where From in row 7 is later than To and F2 differs from the layer Gross Pricing.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Change From in row 1 to a date before To.
+5. Change Premium to the layer Gross Pricing.
+6. Hover over both fields.",The red highlight is removed from both fields and no tooltip is shown.,NGUI-3780
+TC-NGUI-3780-027,Imported Data - Business Rules Validation,Scenario 28,Date error with a layer mismatch still blocks saving,Negative,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where Days in row 7 is wrong and F2 differs from the layer Gross Pricing.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Check the Expected Errors toggle and the Save button.",The Expected Errors toggle is not visible and Save is disabled.,NGUI-3780
+TC-NGUI-3780-028,Imported Data - Business Rules Validation,Scenario 29,Expected Errors toggle controls Save for layer mismatches,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where only F3, F2 and G7 differ from the layer Signed Line, Gross Pricing and Policy Limit, and there are no From or Days errors.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Check the Expected Errors toggle and the Save button.
+5. Switch the toggle on.
+6. Switch the toggle off.","The toggle The detected errors are expected, let me save the amortisation entries is displayed and off, and Save is disabled. Switching it on enables Save; switching it off disables Save again.",NGUI-3780
+TC-NGUI-3780-029,Saving and Cancelling,Scenario 31,Cancel on review popup saves nothing,Negative,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And a valid Excel file prepared from the template.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Edit a Days value.
+5. Click Cancel.
+6. Open the Financial Layers tab and check the layer.",The popup closes. No imported or amended data is saved and the layer has no amortisation schedule.,NGUI-3780
+TC-NGUI-3780-030,Saving and Cancelling,Scenario 32,"Save stores the schedule, amendments and file",Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where all values match the layer, so there are no validation errors.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Change Gross Exposure in row 1 to 2000000.
+5. Click Save.
+6. Open View Details for the layer.
+7. Open the program files.",The popup closes. View Details shows the schedule against the selected layer with Gross Exposure 2000000 in row 1. The uploaded file is in the PML Amortisation Schedule drop spot.,NGUI-3780
+TC-NGUI-3780-031,Saving and Cancelling,Scenario 32,Saved values keep full decimal precision,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where row 7 has Gross Exposure 1234.56 and there are no validation errors.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Click Save.
+5. Check the stored Gross Exposure value for the layer (database or API).",The stored Gross Exposure value is 1234.56. Rounding applies to display only.,NGUI-3780
+TC-NGUI-3780-032,Saving and Cancelling,Scenario 33,Save with accepted mismatches,Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where only F2 differs from the layer Gross Pricing.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Switch the Expected Errors toggle on.
+5. Click Save.
+6. Open View Details for the layer.",The popup closes and the schedule is saved against the layer with the mismatching Premium value.,NGUI-3780
+TC-NGUI-3780-033,Saving and Cancelling,Q7 answer,Re-upload replaces the schedule with the latest file,Validation,Medium,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated, and an amortisation schedule is saved for the layer. And a second valid Excel file with different values prepared from the template.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.
+4. Click Save.
+5. Open View Details for the layer.",View Details shows the values from the second file.,NGUI-3780
+TC-NGUI-3780-034,Amort Schedule Fields in Fin Layer,"Scenario 34, Scenario 35, Scenario 36",Amort Schedule row with a saved schedule,Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated, and an amortisation schedule is saved for the layer where the last row has To = 31/12/2029.
+2. Open the Financial Layers tab.
+3. Put the layer in edit mode.","In view mode an Amort Schedule row is shown after Profit Commission with the label Amort Schedule, the read-only end date 31/12/2029 and an enabled View Details eye button; the toggle is not visible. In edit mode the Amort Schedule toggle is visible.",NGUI-3780
+TC-NGUI-3780-035,Amort Schedule Fields in Fin Layer,"Scenario 35, Scenario 36, Scenario 39",Amort Schedule row without a schedule,Validation,Medium,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated, and no amortisation schedule is saved for the layer.
+2. Open the Financial Layers tab.
+3. Put the layer in edit mode and switch the Amort Schedule toggle on.","The end date is blank, the View Details eye button is disabled and the Amort Freeze Date toggle is disabled.",NGUI-3780
+TC-NGUI-3780-036,Amort Schedule Fields in Fin Layer,Scenario 37,View Details popup shows the saved schedule,Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated, and an amortisation schedule is saved for the layer.
+2. Open the Financial Layers tab.
+3. Click the View Details eye button.","A popup shows a table with From, To, Days, Gross Exposure, Repayment and Policy Limit, and a summary with Total Repayments, Total Premium, Fid Share and Fid Line. Values match the saved schedule.",NGUI-3780
+TC-NGUI-3780-037,Amort Schedule Fields in Fin Layer,"Scenario 38, Scenario 39",Amort Freeze Date row and toggle state,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated, and an amortisation schedule is saved for the layer.
+2. Open the Financial Layers tab and put the layer in edit mode.
+3. Switch the Amort Schedule toggle on.
+4. Switch the Amort Schedule toggle off.","An Amort Freeze Date row is shown after Amort Schedule with the label Amort Freeze Date, a toggle and a date picker. The Freeze Date toggle is enabled while the Amort Schedule toggle is on and disabled when it is off.",NGUI-3780
+TC-NGUI-3780-038,Amort Schedule Fields in Fin Layer,Scenario 40,Freeze date picker follows the Freeze Date toggle,Validation,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated, and an amortisation schedule is saved for the layer.
+2. Open the Financial Layers tab, put the layer in edit mode and switch the Amort Schedule toggle on.
+3. Switch the Amort Freeze Date toggle on.
+4. Switch the Amort Freeze Date toggle off.",The date picker is enabled while the Freeze Date toggle is on and disabled when it is off.,NGUI-3780
+TC-NGUI-3780-039,Amort Schedule Fields in Fin Layer,Q9 answer,Freeze date outside the schedule dates can be saved,Validation,Medium,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated, and an amortisation schedule is saved for the layer running from 01/01/2027 to 31/12/2029.
+2. Open the Financial Layers tab, put the layer in edit mode and switch both toggles on.
+3. Pick 01/06/2031 as the freeze date.
+4. Save the layer.",The layer is saved and the Amort Freeze Date shows 01/06/2031.,NGUI-3780
+TC-NGUI-3780-040,Mixed Scenarios,"Scenario 5, Scenario 12",Missing header field labels,Negative,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where cells E1, E2 and E3 are empty.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.",The Error importing file popup is displayed. Missing Headers & Labels lists three entries: Repayments - The label of the field Repayments is not in the expected cell - E1; Premium - The label of the field Premium is not in the expected cell - E2; Fidelis Line - The header of the field Fidelis Line is not in the expected cell - E3.,NGUI-3780
+TC-NGUI-3780-041,Mixed Scenarios,"Scenario 5, Scenario 6, Scenario 12",Wrong label text and label in wrong cell,Negative,Medium,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where E1 contains ""Repayment"", G5 contains ""Limit"" and the label ""Premium"" is moved from E2 to E4.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.","Missing Headers & Labels lists three entries with Expected Position E1 (Repayments), G5 (Policy Limit) and E2 (Premium).",NGUI-3780
+TC-NGUI-3780-042,Mixed Scenarios,"Scenario 5, Scenario 13",Missing header field values,Negative,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where cells F1, F2 and F3 are empty.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.",Missing Values lists three entries: Repayments - The value of the field Repayments is not in the expected cell - F1; Premium - The value of the field Premium is not in the expected cell - F2; Fidelis Line - The value of the field Fidelis Line is not in the expected cell - F3.,NGUI-3780
+TC-NGUI-3780-043,Mixed Scenarios,"Scenario 5, Scenario 14",Invalid header field value formats,Negative,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where cells F1, F2 and F3 contain ""abc"".
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.",Invalid Values lists three entries: Repayments - Incorrect format in Repayments value - Decimal - F1; Premium - Incorrect format in Premium value - Percentage - F2; Fidelis Line - Incorrect format in Fidelis Line value - Percentage - F3.,NGUI-3780
+TC-NGUI-3780-044,Mixed Scenarios,"Scenario 6, Scenario 12",Missing table headers,Negative,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where cells B5, B6, C6, D5, E5, F5, G5, H5 and I5 are empty.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.","Missing Headers & Labels lists nine entries, one per header, each with Error ""The header [name] is not in the expected cell"" and its Expected Position: Period B5, From B6, To C6, Days D5, Gross Exposure E5, Repayments F5, Policy Limit G5, Total Premium H5, Fidelis Premium I5.",NGUI-3780
+TC-NGUI-3780-045,Mixed Scenarios,"Scenario 7, Scenario 19",All consecutive data rows from row 7 are read,Happy Path,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where rows 7 to 506 (500 rows) contain complete data.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.",The review popup table shows all 500 rows matching Excel rows 7 to 506 in the same order.,NGUI-3780
+TC-NGUI-3780-046,Mixed Scenarios,"Scenario 7, Scenario 8, Scenario 13, Scenario 15",Missing table values are listed per cell,Negative,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where B8, C8, D8 and E8 are empty, F9, G9, H9 and I9 are empty, and all other cells are populated.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.","Missing Values lists eight separate entries with Error ""The value of the field [name] is not in the expected cell"" and positions B8, C8, D8, E8, F9, G9, H9 and I9. Errors from the same row are not combined. The section count is 8.",NGUI-3780
+TC-NGUI-3780-047,Mixed Scenarios,"Scenario 8, Scenario 14",Invalid table value formats are listed per cell,Negative,High,,"1. Open an existing Program with COB = Specialty and LOB = Political Risk, with a financial layer that has Signed Line, Gross Pricing and Policy Limit populated. And Excel file prepared from the valid template where row 9 has ""abc"" in B9, C9, E9, F9, G9, H9 and I9, and 30.5 in D9.
+2. Upload the file to the ""PML Amortisation Schedule"" drop spot in the add file popup.
+3. Select the layer in the Fin Layer dropdown and click Apply.","Invalid Values lists eight entries with Error ""Incorrect format in [name] value"": From Date B9, To Date C9, Days Integer D9, Gross Exposure Decimal E9, Repayments Decimal F9, Policy Limit Decimal G9, Total Premium Decimal H9, Fidelis Premium Decimal I9.",NGUI-3780
