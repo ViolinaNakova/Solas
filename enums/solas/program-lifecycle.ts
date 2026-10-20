@@ -49,6 +49,8 @@ export enum LifecycleOption {
     CLIENT_SIZE_LARGE_RISK = 'Large Risk / Reinsurance',
     CONTRACT_DRAFT_RECEIVED = 'Draft Received',
     CONTRACT_NO_REVIEW_REQUIRED = 'No Review Required',
+    RPI_TYPE_NEW_TO_FIDELIS = 'New to Fidelis',
+    PLACING_BASIS_DIRECT_OPEN_MARKET = 'Direct Open Market',
 }
 
 /** UI feedback text shown during the program lifecycle. */

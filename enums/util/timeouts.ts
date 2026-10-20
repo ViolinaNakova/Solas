@@ -2,6 +2,13 @@ export enum Timeouts {
     // The Financial Layers grid can take well over the default 10s expect
     // timeout to render after entering the step or after a save.
     LAYER_GRID_LOAD = 30_000,
+    // QA intermittently shows a blank page for well over the default 10s
+    // expect timeout before rendering a route (Submissions landing page, the
+    // Add Program wizard), especially with several workers running.
+    APP_RENDER = 40_000,
+    // Test timeout for checks that open the Add Program wizard: loading
+    // Submissions and the wizard alone can each take 10-30s on QA.
+    ADD_PROGRAM_WIZARD_TEST = 120_000,
     // Click-to-edit layer fields switch out of readonly almost instantly; a
     // short wait lets a field that lost its edit state be re-clicked quickly.
     FIELD_EDITABLE = 3_000,

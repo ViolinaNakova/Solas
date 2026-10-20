@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test';
+import { escapeRegExp } from '../../helpers/util/util';
 import { Timeouts } from '../../enums/util/timeouts';
 import { ApiEndpoints } from '../../enums/solas/api-endpoints';
 import { SummarySectionComponent } from '../components/summary-section.component';
@@ -89,6 +90,38 @@ export class ProgramChecksPage {
         // Check buttons are icon-only with no accessible name; the data-ref is
         // the only stable attribute.
         return this.page.locator(`[data-ref="${dataRef}"]`);
+    }
+
+    // ==================== Locators: Layer Checks (visibility) ====================
+    // The Layer Checks grid's row headers are divs with a `<field>-label`
+    // data-ref; other Checks sections use the same pattern, so the headers are
+    // scoped to the section holding the "Layer Checks" heading.
+
+    get layerChecksSection(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- the section container has no role/label/testid; it is identified by the heading it holds.
+        const sections = this.page
+            .locator('div')
+            .filter({
+                has: this.page.getByRole('heading', {
+                    name: 'Layer Checks',
+                    exact: true,
+                }),
+            })
+            .filter({
+                // eslint-disable-next-line playwright/no-raw-locators -- the grid's ID row header has no role/label/testid; data-ref is the only stable attribute.
+                has: this.page.locator('[data-ref="id-label"]'),
+            });
+        // eslint-disable-next-line playwright/no-nth-methods -- every ancestor holding both the heading and the grid matches; the innermost (last in document order) is the section itself.
+        return sections.last();
+    }
+
+    layerChecksFieldLabel(label: string): Locator {
+        const caption = new RegExp(`^${escapeRegExp(label)}\\s*\\*?$`);
+        // eslint-disable-next-line playwright/no-raw-locators -- grid row headers have no role/label/testid; data-ref is the only stable attribute.
+        const rowHeaders = this.layerChecksSection.locator(
+            '[data-ref$="-label"]'
+        );
+        return rowHeaders.filter({ hasText: caption });
     }
 
     // ==================== Actions ====================

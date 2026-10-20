@@ -11,3 +11,7 @@ export function formatShortDate(value: Date): string {
     const month = value.toLocaleDateString('en-US', { month: 'short' });
     return `${day}-${month}-${value.getFullYear()}`;
 }
+
+export function escapeRegExp(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}

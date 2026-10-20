@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { Routes } from '../../enums/solas/routes';
+import { Timeouts } from '../../enums/util/timeouts';
 
 export class SubmissionsPage {
     constructor(private readonly page: Page) {}
@@ -20,7 +21,9 @@ export class SubmissionsPage {
      */
     async open(): Promise<void> {
         await this.page.goto(Routes.SUBMISSIONS);
-        await expect(this.addNewProgramButton).toBeVisible();
+        await expect(this.addNewProgramButton).toBeVisible({
+            timeout: Timeouts.APP_RENDER,
+        });
     }
 
     /**

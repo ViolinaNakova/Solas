@@ -3,6 +3,12 @@ import {
     ReinsuranceMarinePerilCode,
     reinsuranceMarinePerilCodes,
 } from '../../static/solas/perils';
+import {
+    SpaceProgramType,
+    spaceProgramTypes,
+    spaceProgramTypesWithTaskLifecycle,
+    SpaceTaskLifecycleProgramType,
+} from '../../static/solas/space-visibility';
 
 export type SatelliteLaunchLayerData = {
     description: string;
@@ -175,4 +181,22 @@ export function generatePVWarTerrorReProgramData(): PVWarTerrorReProgramData {
  */
 export function generateReinsuranceMarinePeril(): ReinsuranceMarinePerilCode {
     return faker.helpers.arrayElement(reinsuranceMarinePerilCodes);
+}
+
+/**
+ * Picks a random Specialty / Space Program Type for the Add a New Program
+ * dialog (all Space Program Types share the same Initial Details field set).
+ * @returns {SpaceProgramType} A randomly selected Space Program Type.
+ */
+export function generateSpaceProgramType(): SpaceProgramType {
+    return faker.helpers.arrayElement(spaceProgramTypes);
+}
+
+/**
+ * Picks a random Space Program Type that can be taken to Bound through the
+ * task-driven lifecycle (every type except Space Reinsurance).
+ * @returns {SpaceTaskLifecycleProgramType} A randomly selected Program Type.
+ */
+export function generateSpaceTaskLifecycleProgramType(): SpaceTaskLifecycleProgramType {
+    return faker.helpers.arrayElement(spaceProgramTypesWithTaskLifecycle);
 }

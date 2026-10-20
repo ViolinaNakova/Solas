@@ -3,7 +3,7 @@ import {
     ReinsuranceTreatyLayerData,
     SatelliteLaunchLayerData,
 } from '../../test-data/factories/solas/program.factory';
-import { formatShortDate } from '../../helpers/util/util';
+import { escapeRegExp, formatShortDate } from '../../helpers/util/util';
 import { Timeouts } from '../../enums/util/timeouts';
 
 export class AddProgramPage {
@@ -112,6 +112,61 @@ export class AddProgramPage {
         return this.page.getByTestId('terrorPoolId-input');
     }
 
+    // ==================== Locators: Initial Details (visibility) ====================
+    // Each wizard section renders its fields in a `wizard-step-content`
+    // container; the Initial Details one is the only one holding Client.
+
+    get initialDetailsSection(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- section container has no role/label/testid; data-ref is the only stable attribute.
+        return this.page
+            .locator('[data-ref="wizard-step-content"]')
+            .filter({ has: this.clientInput });
+    }
+
+    initialDetailsFieldLabel(label: string): Locator {
+        // Matched on <label> elements only: getByText would also hit dropdown
+        // placeholders that repeat the field name (e.g. "MGA Code"). Required
+        // fields render a separate "*" marker after the label text.
+        const caption = new RegExp(`^${escapeRegExp(label)}\\s*\\*?$`);
+        // eslint-disable-next-line playwright/no-raw-locators -- field captions are <label> elements without a for= target, so getByLabel cannot reach them.
+        const labels = this.initialDetailsSection.locator('label');
+        return labels.filter({ hasText: caption });
+    }
+
+    get reinsuranceSwitch(): Locator {
+        return this.initialDetailsSection.getByRole('switch', {
+            name: 'Re',
+            exact: true,
+        });
+    }
+
+    get hasSurplusLineBrokerSwitch(): Locator {
+        return this.initialDetailsSection.getByRole('switch', {
+            name: 'Has Surplus Line Broker',
+        });
+    }
+
+    get binderLineSlipSwitch(): Locator {
+        return this.initialDetailsSection.getByRole('switch', {
+            name: 'Binder / Line Slip',
+        });
+    }
+
+    get triaEligibleSwitch(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- switch has no accessible name or testid; data-ref is the only stable attribute.
+        return this.page.locator('[data-ref="tria-eligible-switch"]');
+    }
+
+    get addClientButton(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- icon-only button with no accessible name or testid; data-ref is the only stable attribute.
+        return this.page.locator('[data-ref="client-add-client-button"]');
+    }
+
+    get addLocalBrokerButton(): Locator {
+        // eslint-disable-next-line playwright/no-raw-locators -- icon-only button with no accessible name or testid; data-ref is the only stable attribute.
+        return this.page.locator('[data-ref="add-local-broker-button"]');
+    }
+
     // ==================== Locators: Select Perils ====================
 
     get perilsHeading(): Locator {
@@ -128,6 +183,22 @@ export class AddProgramPage {
         return this.page.getByRole('button', {
             name: new RegExp(`^${perilCode}(\\s|$)`),
         });
+    }
+
+    // ==================== Locators: Financial Layers (visibility) ====================
+    // Row headers of the layer grid are divs with a `<field>-label` data-ref.
+    // Some data-refs do not match their caption (e.g. "carrier-label" reads
+    // "Carrier Binder"), so they are matched by caption; the program header's
+    // own "-label" captions ("Insured:") and the grid's floating sticky copy
+    // of the header column ("floating-header-*") are excluded.
+
+    financialLayerFieldLabel(label: string): Locator {
+        const caption = new RegExp(`^${escapeRegExp(label)}\\s*\\*?$`);
+        // eslint-disable-next-line playwright/no-raw-locators -- grid row headers have no role/label/testid; data-ref is the only stable attribute.
+        const rowHeaders = this.page.locator(
+            '[data-ref$="-label"]:not([data-ref^="page-header-"]):not([data-ref^="floating-header-"])'
+        );
+        return rowHeaders.filter({ hasText: caption });
     }
 
     // ==================== Locators: Financial Layers ====================
@@ -565,10 +636,16 @@ export class AddProgramPage {
             this.lineOfBusinessTrigger,
             lineOfBusiness
         );
-        await this.selectSearchableOption(this.zoneInput, zone);
+        // Some Lines of Business pre-select a Zone (Space -> "Worldwide").
+        // Clicking an already-selected Zone option deselects it, and an "Add"
+        // following that deselect/reselect intermittently never opens the
+        // wizard -- so a pre-selected Zone is left untouched.
+        await this.ensureOptionSelected(this.zoneInput, zone);
         await this.selectSearchableOption(this.programTypeTrigger, programType);
         await this.addDialogSubmitButton.click();
-        await expect(this.clientInput).toBeVisible();
+        await expect(this.clientInput).toBeVisible({
+            timeout: Timeouts.APP_RENDER,
+        });
     }
 
     /**
@@ -644,6 +721,43 @@ export class AddProgramPage {
         await this.selectSearchableOption(
             this.cessionConsiderationTrigger,
             'N/A'
+        );
+    }
+
+    /**
+     * Clicks an Initial Details switch and waits until its checked state
+     * flips, so fields that depend on it have had the chance to re-render.
+     * @param {Locator} toggle - The switch to click.
+     * @returns {Promise<void>}
+     */
+    async flipSwitch(toggle: Locator): Promise<void> {
+        const wasChecked =
+            (await toggle.getAttribute('aria-checked')) === 'true';
+        await toggle.click();
+        await expect(toggle).toHaveAttribute(
+            'aria-checked',
+            String(!wasChecked)
+        );
+    }
+
+    /**
+     * Changes the Zone of the program being created in Initial Details.
+     * @param {string} zone - Exact Zone option text (e.g. "US Nationwide").
+     * @returns {Promise<void>}
+     */
+    async changeZone(zone: string): Promise<void> {
+        await this.selectSearchableOption(this.zoneInput, zone);
+    }
+
+    /**
+     * Selects the Placing Office of the program being created.
+     * @param {string} placingOffice - Exact Placing Office option text (e.g. "Dublin").
+     * @returns {Promise<void>}
+     */
+    async selectPlacingOffice(placingOffice: string): Promise<void> {
+        await this.selectSearchableOption(
+            this.placingOfficeTrigger,
+            placingOffice
         );
     }
 
@@ -897,6 +1011,48 @@ export class AddProgramPage {
         // program getting flagged "Marquee Client" -- pinning it to a nominal
         // value avoids that (see Solas_AddProgram_Workflow.md).
         await this.fillAndVerify(this.estGrossPremium100Input(layerIndex), '1');
+    }
+
+    /**
+     * Fills only the financial layer fields every Space Program Type needs to
+     * save the layer and pass the Bound status gate (Description, the plain
+     * numeric fields, RPI Type, Placing Basis -- Period Basis then defaults
+     * to "LOD" -- and Earning Pattern, which Bound requires). Program Type
+     * specific fields (Launch Vehicle, Satellite Name, Orbit Type, ...) are
+     * optional and left empty, so this works for any Space Program Type.
+     * Earning Pattern is set last, since later field changes can reset it.
+     * @param {number} layerIndex - The 0-based layer index.
+     * @param {SatelliteLaunchLayerData} data - Sample layer data from the program factory (only its description and numeric values are used).
+     * @param {string} rpiType - Exact RPI Type option text.
+     * @param {string} placingBasis - Exact Placing Basis option text.
+     * @param {string} earningPattern - Exact Earning Pattern option text.
+     * @returns {Promise<void>}
+     */
+    async fillRequiredSpaceFinancialLayer(
+        layerIndex: number,
+        data: SatelliteLaunchLayerData,
+        rpiType: string,
+        placingBasis: string,
+        earningPattern: string
+    ): Promise<void> {
+        await this.waitForLayerGrid();
+        await this.fillAndVerify(
+            this.descriptionInput(layerIndex),
+            data.description
+        );
+        await this.fillFinancialLayerNumericFields(layerIndex, data);
+        await this.selectSearchableOption(
+            this.rpiTypeTrigger(layerIndex),
+            rpiType
+        );
+        await this.selectSearchableOption(
+            this.placingBasisTrigger(layerIndex),
+            placingBasis
+        );
+        await this.selectSearchableOption(
+            this.earningPatternTrigger(layerIndex),
+            earningPattern
+        );
     }
 
     /**

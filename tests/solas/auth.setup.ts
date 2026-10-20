@@ -25,17 +25,21 @@ test.describe('solas auth setup', () => {
         const context = await browser.newContext({
             storageState: StorageStatePaths.SOLAS,
         });
-        const page = await context.newPage();
+        try {
+            const page = await context.newPage();
 
-        await page.goto(Routes.SUBMISSIONS);
+            await page.goto(Routes.SUBMISSIONS, {
+                waitUntil: 'domcontentloaded',
+            });
 
-        await expect(
-            page
-                .getByRole('main')
-                .getByRole('button', { name: 'Add a New Program' }),
-            'Session appears expired (redirected to Microsoft login or the Submissions page did not render) — regenerate the storage state manually.'
-        ).toBeVisible();
-
-        await context.close();
+            await expect(
+                page
+                    .getByRole('main')
+                    .getByRole('button', { name: 'Add a New Program' }),
+                'Session appears expired (redirected to Microsoft login or the Submissions page did not render) — regenerate the storage state manually.'
+            ).toBeVisible();
+        } finally {
+            await context.close();
+        }
     });
 });
