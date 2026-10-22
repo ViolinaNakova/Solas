@@ -14,7 +14,7 @@ test-downloads/
 
 # Environment files (keep .env.example as template)
 env/.env.*
-!env/.env.example
+env/.env.example*
 
 # Dev Container logs
 .devcontainer/*.log
