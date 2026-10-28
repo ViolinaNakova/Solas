@@ -72,6 +72,7 @@ Every Plan output before the human gate uses this shape:
 | "Create factory for X"                      | `data-strategy`         | `type-safety`, `api-testing`                              |
 | "Design/create test cases for X" (Jira issue, screenshots, or both) | `test-case-creator` | `common-tasks` (only if user asks to automate the cases). Use `jira-test-designer` agent instead only if the user explicitly names it. |
 | "Log/write a bug ticket for X" | `bug-ticket-logger` | `atlassian` MCP tools (only if user asks to file it into Jira). Use `jira-bug-logger` agent instead only if the user explicitly names it. |
+| "Daily / monthly report of my completed tasks" | `task-report` | `atlassian` MCP tools (read-only), git log |
 | "Wire setup helper / helper fixture"        | `helpers` or `fixtures` | `api-testing` Phase 8                                     |
 | "Add env var / config / utility URL"        | `config`                | `enums`, `type-safety`                                    |
 | "Add enum / endpoint / message"             | `enums`                 | `playwright-cli` for live-text verification               |
